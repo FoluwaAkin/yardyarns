@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -23,6 +23,7 @@ export async function proxy(request: NextRequest) {
     }
   )
 
+  // Refreshes the session token so auth.uid() works in DB queries
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -38,7 +39,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages (but not /auth/signout or /auth/callback)
+  // Redirect authenticated users away from auth pages
   const isAuthPage = pathname === '/auth/signin' || pathname === '/auth/signup'
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
