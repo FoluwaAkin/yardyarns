@@ -1,5 +1,5 @@
 {
-  "name": "rentrate",
+  "name": "yardyarns",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,9 +8,17 @@
     "start": "next start"
   },
   "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.4.2",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.104.1",
+    "@tanstack/react-query": "^5.100.5",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^1.11.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.74.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

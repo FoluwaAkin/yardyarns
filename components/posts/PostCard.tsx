@@ -1,0 +1,144 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { MapPin, MessageCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { LikeButton } from '@/components/feed/LikeButton'
+import { VerifiedBadge } from '@/components/feed/VerifiedBadge'
+import { CommentThread } from '@/components/comments/CommentThread'
+
+interface CommentRow {
+  id: string
+  body: string
+  created_at: string
+  user_id: string
+  parent_id: string | null
+  username: string
+}
+
+interface Props {
+  post: {
+    id: string
+    body: string
+    created_at: string
+    unit_id: string
+    user_id: string
+  }
+  username: string
+  isVerified: boolean
+  unitLabel: string
+  propertyAddress: string
+  propertyId: string
+  likeCount: number
+  commentCount: number
+  hasLiked: boolean
+  currentUserId: string | null
+  currentUsername?: string | null
+}
+
+export function PostCard({
+  post,
+  username,
+  isVerified,
+  unitLabel,
+  propertyAddress,
+  propertyId,
+  likeCount,
+  commentCount,
+  hasLiked,
+  currentUserId,
+  currentUsername = null,
+}: Props) {
+  const [showComments, setShowComments] = useState(false)
+  const [comments, setComments] = useState<CommentRow[] | null>(null)
+  const [liveCount, setLiveCount] = useState(commentCount)
+
+  useEffect(() => {
+    if (!showComments || comments !== null) return
+    const supabase = createClient()
+    supabase
+      .from('comments')
+      .select('id, body, created_at, user_id, parent_id, profiles!comments_user_id_fkey(username)')
+      .eq('post_id', post.id)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        const rows = (data ?? []).map((c) => ({
+          id: c.id,
+          body: c.body,
+          created_at: c.created_at,
+          user_id: c.user_id,
+          parent_id: c.parent_id,
+          username: (c.profiles as unknown as { username: string } | null)?.username ?? 'unknown',
+        }))
+        setComments(rows)
+        setLiveCount(rows.filter((r) => !r.parent_id).length)
+      })
+  }, [showComments, post.id, comments])
+
+  return (
+    <article className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm dark:shadow-gray-900">
+      {/* Header */}
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Link href={`/u/${username}`} className="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:underline">
+            @{username}
+          </Link>
+          {isVerified && <VerifiedBadge />}
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600">
+            Post
+          </span>
+        </div>
+        <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
+          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+        </span>
+      </div>
+
+      {/* Location */}
+      <div className="mb-3 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+        <MapPin size={12} />
+        <Link href={`/units/${post.unit_id}`} className="hover:underline">
+          {unitLabel}
+        </Link>
+        <span>·</span>
+        <Link href={`/properties/${propertyId}`} className="hover:underline">
+          {propertyAddress}
+        </Link>
+      </div>
+
+      {/* Body */}
+      <p className="mb-4 text-sm leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{post.body}</p>
+
+      {/* Actions */}
+      <div className="flex items-center gap-4 border-t border-gray-100 dark:border-gray-700/50 pt-3">
+        <LikeButton
+          postId={post.id}
+          initialCount={likeCount}
+          initialLiked={hasLiked}
+          userId={currentUserId}
+        />
+        <button
+          onClick={() => setShowComments((v) => !v)}
+          className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition"
+        >
+          <MessageCircle size={14} />
+          {liveCount > 0 && <span>{liveCount}</span>}
+          <span>{showComments ? 'Hide' : 'Comment'}</span>
+        </button>
+      </div>
+
+      {/* Inline comments */}
+      {showComments && (
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
+          <CommentThread
+            postId={post.id}
+            initialComments={comments ?? []}
+            currentUserId={currentUserId}
+            currentUsername={currentUsername}
+          />
+        </div>
+      )}
+    </article>
+  )
+}
