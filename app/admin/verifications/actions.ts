@@ -55,16 +55,28 @@ export async function verifyTenancy(tenancyId: string) {
 
   if (error) throw new Error(error.message)
 
-  // Notify user — best-effort
+  // In-app + email notifications — best-effort
   if (tenancy) {
     const profile = tenancy.profiles as unknown as { username: string } | null
     const unit = tenancy.units as unknown as { unit_identifier: string; properties: { address: string; city: string } | null } | null
-    await sendTenancyVerified({
-      userId: tenancy.user_id,
-      username: profile?.username ?? '',
-      unitIdentifier: unit?.unit_identifier ?? '',
-      propertyAddress: unit?.properties ? `${unit.properties.address}, ${unit.properties.city}` : '',
-    }).catch(() => {})
+    const unitLabel = unit?.unit_identifier ?? ''
+    const address = unit?.properties ? `${unit.properties.address}, ${unit.properties.city}` : ''
+
+    await Promise.all([
+      db.rpc('create_notification', {
+        p_user_id: tenancy.user_id,
+        p_type:    'tenancy_verified',
+        p_title:   'Tenancy verified',
+        p_body:    `Your tenancy at ${unitLabel}${address ? ', ' + address : ''} has been verified. Your ratings now count.`,
+        p_link:    '/notifications',
+      }).catch(() => {}),
+      sendTenancyVerified({
+        userId: tenancy.user_id,
+        username: profile?.username ?? '',
+        unitIdentifier: unitLabel,
+        propertyAddress: address,
+      }).catch(() => {}),
+    ])
   }
 
   revalidatePath('/admin/verifications')
@@ -82,16 +94,28 @@ export async function rejectTenancy(tenancyId: string) {
 
   if (error) throw new Error(error.message)
 
-  // Notify user — best-effort
+  // In-app + email notifications — best-effort
   if (tenancy) {
     const profile = tenancy.profiles as unknown as { username: string } | null
     const unit = tenancy.units as unknown as { unit_identifier: string; properties: { address: string; city: string } | null } | null
-    await sendTenancyRejected({
-      userId: tenancy.user_id,
-      username: profile?.username ?? '',
-      unitIdentifier: unit?.unit_identifier ?? '',
-      propertyAddress: unit?.properties ? `${unit.properties.address}, ${unit.properties.city}` : '',
-    }).catch(() => {})
+    const unitLabel = unit?.unit_identifier ?? ''
+    const address = unit?.properties ? `${unit.properties.address}, ${unit.properties.city}` : ''
+
+    await Promise.all([
+      db.rpc('create_notification', {
+        p_user_id: tenancy.user_id,
+        p_type:    'tenancy_rejected',
+        p_title:   'Tenancy not verified',
+        p_body:    `We couldn't verify your tenancy at ${unitLabel}${address ? ', ' + address : ''}. You can resubmit with a clearer document.`,
+        p_link:    '/dashboard/verify',
+      }).catch(() => {}),
+      sendTenancyRejected({
+        userId: tenancy.user_id,
+        username: profile?.username ?? '',
+        unitIdentifier: unitLabel,
+        propertyAddress: address,
+      }).catch(() => {}),
+    ])
   }
 
   revalidatePath('/admin/verifications')

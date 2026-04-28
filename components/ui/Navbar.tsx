@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { NavLinks } from './NavLinks'
+import { NotificationBell } from './NotificationBell'
 
 export async function Navbar() {
   const supabase = await createClient()
@@ -23,6 +24,7 @@ export async function Navbar() {
           YardYarns
         </Link>
         <nav className="flex items-center gap-1">
+          {user && <NotificationBell userId={user.id} />}
           <NavLinks username={username} />
         </nav>
       </div>
