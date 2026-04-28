@@ -65,7 +65,7 @@ export function PostComposer({ unitId, userId }: Props) {
           <button
             type="submit"
             disabled={loading || body.trim().length === 0}
-            className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-gray-700 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700 disabled:opacity-50 min-h-[44px]"
           >
             {loading && <Loader2 size={12} className="animate-spin" />}
             Post

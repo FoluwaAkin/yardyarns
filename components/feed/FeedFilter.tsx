@@ -5,8 +5,8 @@ import type { FeedFilter } from '@/types'
 
 const OPTIONS: { value: FeedFilter; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'verified', label: 'Verified only' },
-  { value: 'unverified', label: 'Unverified only' },
+  { value: 'verified', label: 'Verified' },
+  { value: 'unverified', label: 'Unverified' },
 ]
 
 export function FeedFilter() {
@@ -31,7 +31,7 @@ export function FeedFilter() {
         <button
           key={opt.value}
           onClick={() => handleChange(opt.value)}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+          className={`rounded-md px-3 py-2 text-xs font-medium transition min-h-[36px] ${
             current === opt.value
               ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'

@@ -49,14 +49,14 @@ function CommentInput({
         onChange={(e) => setBody(e.target.value)}
         placeholder={placeholder}
         maxLength={500}
-        className="flex-1 rounded-lg border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-400 dark:focus:ring-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+        className="flex-1 rounded-lg border border-gray-200 dark:border-gray-600 px-3 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-400 dark:focus:ring-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 min-h-[44px]"
       />
       <button
         type="submit"
         disabled={loading || !body.trim()}
-        className="flex items-center gap-1 rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
+        className="flex items-center gap-1 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 min-h-[44px]"
       >
-        {loading ? <Loader2 size={12} className="animate-spin" /> : 'Reply'}
+        {loading ? <Loader2 size={14} className="animate-spin" /> : 'Post'}
       </button>
     </form>
   )
@@ -96,7 +96,6 @@ export function CommentThread({
     }
   }
 
-  // Build tree
   const roots = comments.filter((c) => !c.parent_id)
   const replies = comments.filter((c) => c.parent_id)
 
@@ -107,11 +106,11 @@ export function CommentThread({
   function renderComment(comment: Comment, depth = 0) {
     const children = getReplies(comment.id)
     return (
-      <div key={comment.id} className={depth > 0 ? 'ml-6 mt-2' : ''}>
-        <div className={`rounded-lg px-3 py-2 ${depth === 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700/50'}`}>
+      <div key={comment.id} className={depth > 0 ? 'ml-4 mt-2' : ''}>
+        <div className={`rounded-lg px-3 py-2.5 ${depth === 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700/50'}`}>
           <div className="flex items-baseline justify-between gap-2 mb-1">
             <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">@{comment.username}</span>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">
+            <span className="shrink-0 text-[10px] text-gray-400 dark:text-gray-500">
               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
             </span>
           </div>
@@ -119,16 +118,16 @@ export function CommentThread({
           {currentUserId && depth === 0 && (
             <button
               onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-              className="mt-1 flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
+              className="mt-2 flex items-center gap-1 py-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
             >
-              <CornerDownRight size={10} />
+              <CornerDownRight size={11} />
               Reply
             </button>
           )}
         </div>
 
         {replyingTo === comment.id && (
-          <div className="ml-6 mt-2">
+          <div className="ml-4 mt-2">
             <CommentInput
               placeholder={`Reply to @${comment.username}…`}
               onSubmit={(body) => submitComment(body, comment.id)}
@@ -154,7 +153,7 @@ export function CommentThread({
       )}
 
       {comments.length === 0 && !currentUserId && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-400 dark:text-gray-500">
           <a href="/auth/signin" className="underline">Sign in</a> to comment.
         </p>
       )}

@@ -159,7 +159,7 @@ export function ReviewCard({
         />
         <button
           onClick={() => setShowComments((v) => !v)}
-          className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition"
+          className="flex items-center gap-1.5 py-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition min-h-[40px]"
         >
           <MessageCircle size={14} />
           {liveCount > 0 && <span>{liveCount}</span>}

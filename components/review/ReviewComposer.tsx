@@ -33,7 +33,7 @@ function StarRating({
           onClick={() => onChange(n)}
           onMouseEnter={() => setHover(n)}
           onMouseLeave={() => setHover(0)}
-          className="transition"
+          className="p-1 transition"
         >
           <Star
             size={20}
@@ -151,7 +151,7 @@ export function ReviewComposer({ unitId, userId, tenancyId }: Props) {
       {/* Period picker */}
       <div>
         <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">Review period</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">From</label>
             <input
@@ -208,7 +208,7 @@ export function ReviewComposer({ unitId, userId, tenancyId }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-700 disabled:opacity-50 min-h-[44px]"
       >
         {loading && <Loader2 size={16} className="animate-spin" />}
         Submit review

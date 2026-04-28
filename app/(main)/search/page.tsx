@@ -60,7 +60,7 @@ export default async function SearchPage({ searchParams }: Props) {
                 <Link
                   key={p.id}
                   href={`/properties/${p.id}`}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="flex items-center gap-3 px-4 py-4 transition hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[56px]"
                 >
                   <MapPin size={16} className="shrink-0 text-gray-400" />
                   <div>

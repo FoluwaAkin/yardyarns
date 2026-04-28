@@ -180,7 +180,7 @@ export default function VerifyTenancyPage() {
         </div>
 
         {/* City / State / Country fallback */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             type="text"
             required
@@ -221,7 +221,7 @@ export default function VerifyTenancyPage() {
         </div>
 
         {/* Dates */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Tenancy start *</label>
             <input
@@ -275,7 +275,7 @@ export default function VerifyTenancyPage() {
               <div className="flex flex-col items-center gap-1.5">
                 <Upload size={20} className="text-gray-400" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">PDF, JPEG or PNG — max 5MB</p>
-                <label className="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <label className="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 min-h-[44px] flex items-center">
                   Browse files
                   <input
                     type="file"
@@ -295,7 +295,7 @@ export default function VerifyTenancyPage() {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-700 disabled:opacity-50 min-h-[44px]"
         >
           {loading && <Loader2 size={16} className="animate-spin" />}
           Submit for verification

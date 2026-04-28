@@ -84,7 +84,7 @@ export default async function PropertyPage({ params }: Props) {
                 <Link
                   key={unit.id}
                   href={`/units/${unit.id}`}
-                  className="flex items-center justify-between px-4 py-3 transition hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="flex items-center justify-between px-4 py-4 transition hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[56px]"
                 >
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {unit.unit_identifier}

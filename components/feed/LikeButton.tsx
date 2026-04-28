@@ -46,7 +46,7 @@ export function LikeButton({ reviewId, postId, initialCount, initialLiked, userI
     <button
       onClick={toggle}
       disabled={loading || !userId}
-      className={`flex items-center gap-1.5 text-xs transition ${
+      className={`flex items-center gap-1.5 py-2 text-xs transition min-h-[40px] ${
         liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
       } disabled:opacity-50`}
     >

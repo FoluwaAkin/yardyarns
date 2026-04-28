@@ -160,7 +160,7 @@ export default async function UserProfilePage({ params }: Props) {
                 } | null
 
                 return (
-                  <div key={t.id} className="flex items-center justify-between px-4 py-3">
+                  <div key={t.id} className="flex items-start gap-3 justify-between px-4 py-4 min-h-[56px]">
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {unit?.unit_identifier ?? 'Unknown unit'}
