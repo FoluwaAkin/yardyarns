@@ -27,7 +27,11 @@ function SignInForm() {
 
     if (error) {
       setLoading(false)
-      setError(error.message)
+      setError(
+        error.message.toLowerCase().includes('email not confirmed')
+          ? 'Please confirm your email address before signing in. Check your inbox for the confirmation link.'
+          : error.message
+      )
       return
     }
 
