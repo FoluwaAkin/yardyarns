@@ -5,12 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import {
   MessageSquare, Star, ArrowLeft, Search,
-  MapPin, Plus, Loader2, ChevronRight,
+  MapPin, Plus, Loader2, X, ChevronDown,
 } from 'lucide-react'
 import { PostComposer } from '@/components/posts/PostComposer'
 import { ReviewComposer } from '@/components/review/ReviewComposer'
 
-type Step = 'idle' | 'searching' | 'unit_select' | 'compose' | 'auth_gate'
+type Step = 'idle' | 'compose' | 'auth_gate'
 type ContributeType = 'post' | 'review'
 
 interface Property {
@@ -38,6 +38,8 @@ export function ContributeFlow({
 
   const [step, setStep] = useState<Step>('idle')
   const [type, setType] = useState<ContributeType | null>(null)
+
+  // Property picker state (lives inside compose step)
   const [query, setQuery] = useState('')
   const [properties, setProperties] = useState<Property[]>([])
   const [searching, setSearching] = useState(false)
@@ -46,9 +48,11 @@ export function ContributeFlow({
   const [loadingUnits, setLoadingUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
   const [tenancyId, setTenancyId] = useState<string | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(true) // open until unit chosen
   const [showAddUnit, setShowAddUnit] = useState(false)
   const [newUnitName, setNewUnitName] = useState('')
   const [addingUnit, setAddingUnit] = useState(false)
+
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Debounced property search
@@ -74,34 +78,35 @@ export function ContributeFlow({
 
   function start(contributeType: ContributeType) {
     setType(contributeType)
-    setStep('searching')
+    setStep('compose')
     setQuery('')
     setProperties([])
     setSelectedProperty(null)
     setUnits([])
     setSelectedUnit(null)
     setTenancyId(null)
+    setPickerOpen(true)
     setShowAddUnit(false)
     setTimeout(() => searchInputRef.current?.focus(), 50)
   }
 
-  function back() {
-    if (step === 'searching') {
-      setStep('idle')
-    } else if (step === 'unit_select') {
-      setStep('searching')
-      setSelectedProperty(null)
-      setUnits([])
-      setShowAddUnit(false)
-    } else if (step === 'compose' || step === 'auth_gate') {
-      setStep('unit_select')
-      setSelectedUnit(null)
-    }
+  function reset() {
+    setStep('idle')
+    setType(null)
+    setSelectedProperty(null)
+    setSelectedUnit(null)
+    setQuery('')
+    setProperties([])
+    setUnits([])
+    setPickerOpen(true)
+    setTenancyId(null)
   }
 
   async function selectProperty(property: Property) {
     setSelectedProperty(property)
     setLoadingUnits(true)
+    setQuery(property.name ?? property.address)
+    setProperties([])
     const { data } = await supabaseRef.current
       .from('units')
       .select('id, unit_identifier')
@@ -109,11 +114,11 @@ export function ContributeFlow({
       .order('unit_identifier')
     setUnits(data ?? [])
     setLoadingUnits(false)
-    setStep('unit_select')
   }
 
   async function selectUnit(unit: Unit) {
     setSelectedUnit(unit)
+    setPickerOpen(false)
 
     if (!currentUserId) {
       setStep('auth_gate')
@@ -130,8 +135,6 @@ export function ContributeFlow({
         .maybeSingle()
       setTenancyId(data?.id ?? null)
     }
-
-    setStep('compose')
   }
 
   async function addUnit() {
@@ -155,50 +158,13 @@ export function ContributeFlow({
   }
 
   function onSuccess() {
-    setStep('idle')
-    setType(null)
-    setSelectedProperty(null)
-    setSelectedUnit(null)
+    reset()
     router.refresh()
   }
 
-  // ── Breadcrumb header shared across non-idle steps ──────────────────────
-  const breadcrumb = (
-    <div className="mb-4 flex items-center gap-2">
-      <button
-        onClick={back}
-        className="flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300"
-      >
-        <ArrowLeft size={15} />
-      </button>
-      <div className="flex min-w-0 items-center gap-1.5 text-sm">
-        <span className={type === 'post' ? 'text-amber-500' : 'text-blue-500'}>
-          {type === 'post' ? <MessageSquare size={13} /> : <Star size={13} />}
-        </span>
-        <span className="font-medium text-gray-700 dark:text-gray-300">
-          {type === 'post' ? 'Share a story' : 'Write a review'}
-        </span>
-        {selectedProperty && (
-          <>
-            <span className="text-gray-300 dark:text-gray-600">·</span>
-            <span className="truncate text-gray-500 dark:text-gray-400">
-              {selectedProperty.name ?? selectedProperty.address}
-            </span>
-          </>
-        )}
-        {selectedUnit && (
-          <>
-            <span className="text-gray-300 dark:text-gray-600">·</span>
-            <span className="truncate text-gray-500 dark:text-gray-400">
-              {selectedUnit.unit_identifier}
-            </span>
-          </>
-        )}
-      </div>
-    </div>
-  )
+  const propertyLabel = selectedProperty?.name ?? selectedProperty?.address ?? ''
 
-  // ── IDLE: two bubble CTAs ────────────────────────────────────────────────
+  // ── IDLE ─────────────────────────────────────────────────────────────────
   if (step === 'idle') {
     return (
       <div className="grid grid-cols-2 gap-3">
@@ -235,145 +201,27 @@ export function ContributeFlow({
     )
   }
 
-  // ── SEARCHING: property lookup ───────────────────────────────────────────
-  if (step === 'searching') {
-    return (
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
-        {breadcrumb}
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-          Which property?
-        </p>
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Address, building name or city…"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-400 dark:focus:ring-gray-400 dark:text-gray-100 dark:placeholder-gray-500"
-          />
-        </div>
-
-        {query.trim().length >= 2 && (
-          <div className="mt-2">
-            {searching ? (
-              <div className="flex items-center gap-2 py-3 text-sm text-gray-400">
-                <Loader2 size={13} className="animate-spin" /> Searching…
-              </div>
-            ) : properties.length === 0 ? (
-              <div className="py-3 text-sm text-gray-400 dark:text-gray-500">
-                No properties found.{' '}
-                <a href="/search" className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300">
-                  Add it here
-                </a>
-                , then come back.
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                {properties.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => selectProperty(p)}
-                    className="flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <MapPin size={13} className="shrink-0 text-gray-400" />
-                    <div className="min-w-0 flex-1">
-                      {p.name && (
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{p.name}</p>
-                      )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {p.address}, {p.city}, {p.state}
-                      </p>
-                    </div>
-                    <ChevronRight size={14} className="shrink-0 text-gray-300 dark:text-gray-600" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // ── UNIT SELECT ──────────────────────────────────────────────────────────
-  if (step === 'unit_select') {
-    return (
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
-        {breadcrumb}
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-          Which unit?
-        </p>
-
-        {loadingUnits ? (
-          <div className="flex items-center gap-2 py-3 text-sm text-gray-400">
-            <Loader2 size={13} className="animate-spin" /> Loading units…
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {units.length > 0 && (
-              <div className="divide-y divide-gray-100 dark:divide-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-2">
-                {units.map((u) => (
-                  <button
-                    key={u.id}
-                    onClick={() => selectUnit(u)}
-                    className="flex w-full items-center justify-between px-3 py-3 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {u.unit_identifier}
-                    </span>
-                    <ChevronRight size={14} className="text-gray-300 dark:text-gray-600" />
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {showAddUnit ? (
-              <div className="flex gap-2">
-                <input
-                  autoFocus
-                  type="text"
-                  value={newUnitName}
-                  onChange={(e) => setNewUnitName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') addUnit() }}
-                  placeholder="e.g. Flat 3B, Room 12"
-                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-400 dark:text-gray-100 dark:placeholder-gray-500"
-                />
-                <button
-                  onClick={addUnit}
-                  disabled={addingUnit || !newUnitName.trim()}
-                  className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
-                >
-                  {addingUnit ? <Loader2 size={12} className="animate-spin" /> : 'Add'}
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAddUnit(true)}
-                className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-3 py-2.5 text-sm text-gray-500 dark:text-gray-400 transition hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-              >
-                <Plus size={13} />
-                Add a unit
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // ── AUTH GATE ────────────────────────────────────────────────────────────
+  // ── AUTH GATE ─────────────────────────────────────────────────────────────
   if (step === 'auth_gate') {
     const redirectTo = `/units/${selectedUnit?.id}`
     return (
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
-        {breadcrumb}
+        <div className="mb-4 flex items-center gap-2">
+          <button
+            onClick={reset}
+            className="flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <ArrowLeft size={15} />
+          </button>
+          <span className={`text-sm font-medium ${type === 'post' ? 'text-amber-500' : 'text-blue-500'}`}>
+            {type === 'post' ? 'Share a story' : 'Write a review'}
+          </span>
+        </div>
         <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
           Sign in to {type === 'post' ? 'share your story' : 'write your review'} for{' '}
           <span className="font-medium text-gray-900 dark:text-gray-100">
             {selectedUnit?.unit_identifier}
-            {selectedProperty ? `, ${selectedProperty.name ?? selectedProperty.address}` : ''}
+            {selectedProperty ? `, ${propertyLabel}` : ''}
           </span>
           .
         </p>
@@ -395,45 +243,188 @@ export function ContributeFlow({
     )
   }
 
-  // ── COMPOSE ──────────────────────────────────────────────────────────────
-  if (step === 'compose' && selectedUnit && currentUserId) {
-    return (
-      <div className="space-y-1">
-        {/* Slim breadcrumb outside the composer card */}
-        <div className="flex items-center gap-2 px-1 pb-1">
+  // ── COMPOSE (with inline property picker) ────────────────────────────────
+  return (
+    <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <div className="flex items-center gap-2">
           <button
-            onClick={back}
-            className="flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600"
+            onClick={reset}
+            className="flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <ArrowLeft size={15} />
           </button>
-          <div className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-            <span className={type === 'post' ? 'text-amber-500' : 'text-blue-500'}>
-              {type === 'post' ? <MessageSquare size={12} /> : <Star size={12} />}
-            </span>
-            <span className="truncate">
-              {selectedProperty?.name ?? selectedProperty?.address} · {selectedUnit.unit_identifier}
-            </span>
-          </div>
+          <span className={`flex items-center gap-1.5 text-sm font-medium ${type === 'post' ? 'text-amber-500' : 'text-blue-500'}`}>
+            {type === 'post' ? <MessageSquare size={13} /> : <Star size={13} />}
+            {type === 'post' ? 'Share a story' : 'Write a review'}
+          </span>
         </div>
+      </div>
 
-        {type === 'post' ? (
-          <PostComposer
-            unitId={selectedUnit.id}
-            userId={currentUserId}
-            onSuccess={onSuccess}
-          />
+      {/* Property picker */}
+      <div className="px-4 pb-3">
+        {selectedUnit && !pickerOpen ? (
+          // Compact selected state
+          <button
+            onClick={() => { setPickerOpen(true); setSelectedUnit(null); setTenancyId(null) }}
+            className="flex w-full items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-left transition hover:border-gray-300 dark:hover:border-gray-500"
+          >
+            <MapPin size={13} className="shrink-0 text-gray-400" />
+            <span className="min-w-0 flex-1 text-xs text-gray-700 dark:text-gray-300 truncate">
+              <span className="font-medium">{selectedUnit.unit_identifier}</span>
+              {selectedProperty && (
+                <span className="text-gray-400 dark:text-gray-500"> · {propertyLabel}, {selectedProperty.city}</span>
+              )}
+            </span>
+            <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500 flex items-center gap-0.5">
+              Change <ChevronDown size={11} />
+            </span>
+          </button>
         ) : (
-          <ReviewComposer
-            unitId={selectedUnit.id}
-            userId={currentUserId}
-            tenancyId={tenancyId}
-            onSuccess={onSuccess}
-          />
+          // Search / unit list
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              {selectedProperty ? 'Select a unit' : 'Which property?'}
+            </p>
+
+            {!selectedProperty ? (
+              // Property search
+              <>
+                <div className="relative">
+                  <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={query}
+                    onChange={(e) => { setQuery(e.target.value); setSelectedProperty(null); setUnits([]) }}
+                    placeholder="Address, building name or city…"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-8 pr-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-400 dark:focus:ring-gray-400 dark:text-gray-100 dark:placeholder-gray-500"
+                  />
+                </div>
+
+                {query.trim().length >= 2 && (
+                  searching ? (
+                    <div className="flex items-center gap-2 py-2 text-xs text-gray-400">
+                      <Loader2 size={12} className="animate-spin" /> Searching…
+                    </div>
+                  ) : properties.length === 0 ? (
+                    <p className="py-2 text-xs text-gray-400 dark:text-gray-500">
+                      No properties found.{' '}
+                      <a href="/search" className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300">
+                        Add it here
+                      </a>
+                      , then come back.
+                    </p>
+                  ) : (
+                    <div className="divide-y divide-gray-100 dark:divide-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                      {properties.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => selectProperty(p)}
+                          className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                          <MapPin size={12} className="shrink-0 text-gray-400" />
+                          <div className="min-w-0 flex-1">
+                            {p.name && <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">{p.name}</p>}
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.address}, {p.city}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                )}
+              </>
+            ) : (
+              // Unit list
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  <button
+                    onClick={() => { setSelectedProperty(null); setUnits([]); setQuery('') }}
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X size={11} /> {propertyLabel}
+                  </button>
+                </div>
+
+                {loadingUnits ? (
+                  <div className="flex items-center gap-2 py-2 text-xs text-gray-400">
+                    <Loader2 size={12} className="animate-spin" /> Loading units…
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {units.length > 0 && (
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-1">
+                        {units.map((u) => (
+                          <button
+                            key={u.id}
+                            onClick={() => selectUnit(u)}
+                            className="flex w-full items-center justify-between px-3 py-2.5 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800"
+                          >
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{u.unit_identifier}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {showAddUnit ? (
+                      <div className="flex gap-2">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={newUnitName}
+                          onChange={(e) => setNewUnitName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') addUnit() }}
+                          placeholder="e.g. Flat 3B, Room 12"
+                          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-400 dark:text-gray-100 dark:placeholder-gray-500"
+                        />
+                        <button
+                          onClick={addUnit}
+                          disabled={addingUnit || !newUnitName.trim()}
+                          className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+                        >
+                          {addingUnit ? <Loader2 size={12} className="animate-spin" /> : 'Add'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowAddUnit(true)}
+                        className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-3 py-2 text-xs text-gray-500 dark:text-gray-400 transition hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      >
+                        <Plus size={12} /> Add a unit
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
-    )
-  }
 
-  return null
+      {/* Composer — only shown once unit is selected */}
+      {selectedUnit && !pickerOpen && currentUserId && (
+        <div className="border-t border-gray-100 dark:border-gray-700/60">
+          {type === 'post' ? (
+            <div className="p-4 pt-3">
+              <PostComposer
+                unitId={selectedUnit.id}
+                userId={currentUserId}
+                onSuccess={onSuccess}
+              />
+            </div>
+          ) : (
+            <div className="p-4 pt-3">
+              <ReviewComposer
+                unitId={selectedUnit.id}
+                userId={currentUserId}
+                tenancyId={tenancyId}
+                onSuccess={onSuccess}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
