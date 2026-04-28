@@ -11,7 +11,7 @@ const BG: Record<EaglePersonality, string> = {
   angry:   '#28100E',
 }
 
-// Accent ring colour per personality
+// Accent ring colour per personality (also exported for use in picker)
 const RING: Record<EaglePersonality, string> = {
   happy:   '#3DAA6E',
   sad:     '#3D6EAA',
@@ -19,6 +19,8 @@ const RING: Record<EaglePersonality, string> = {
   excited: '#D47800',
   angry:   '#C83030',
 }
+
+export const EAGLE_ACCENT: Record<EaglePersonality, string> = RING
 
 // ── Shared palette ────────────────────────────────────────────────────────
 const C = {
