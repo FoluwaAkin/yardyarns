@@ -1,6 +1,18 @@
 import { Resend } from 'resend'
+import { createClient } from '@supabase/supabase-js'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+
+/** Look up a user's email from auth.users — requires service role key */
+async function getUserEmail(userId: string): Promise<string | null> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return null
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+  )
+  const { data } = await admin.auth.admin.getUserById(userId)
+  return data.user?.email ?? null
+}
 
 export async function sendTenancyNotification({
   username,
@@ -43,6 +55,65 @@ export async function sendTenancyNotification({
         <code>tenancies</code> table in your
         <a href="https://supabase.com/dashboard">Supabase dashboard</a>.
       </p>
+    `,
+  })
+}
+
+export async function sendTenancyVerified({
+  userId,
+  username,
+  unitIdentifier,
+  propertyAddress,
+}: {
+  userId: string
+  username: string
+  unitIdentifier: string
+  propertyAddress: string
+}) {
+  if (!process.env.RESEND_API_KEY) return
+  const email = await getUserEmail(userId)
+  if (!email) return
+
+  await resend.emails.send({
+    from: 'YardYarns <notifications@yardyarns.com>',
+    to: email,
+    subject: 'Your tenancy has been verified ✓',
+    html: `
+      <h2>Tenancy verified</h2>
+      <p>Hi @${username},</p>
+      <p>Your tenancy at <strong>${unitIdentifier}, ${propertyAddress}</strong> has been verified.</p>
+      <p>Your ratings will now count towards the unit's overall score.</p>
+      <p style="margin-top:24px;font-size:13px;color:#6b7280">— YardYarns</p>
+    `,
+  })
+}
+
+export async function sendTenancyRejected({
+  userId,
+  username,
+  unitIdentifier,
+  propertyAddress,
+}: {
+  userId: string
+  username: string
+  unitIdentifier: string
+  propertyAddress: string
+}) {
+  if (!process.env.RESEND_API_KEY) return
+  const email = await getUserEmail(userId)
+  if (!email) return
+
+  await resend.emails.send({
+    from: 'YardYarns <notifications@yardyarns.com>',
+    to: email,
+    subject: 'Your tenancy verification was not approved',
+    html: `
+      <h2>Tenancy not verified</h2>
+      <p>Hi @${username},</p>
+      <p>We were unable to verify your tenancy at <strong>${unitIdentifier}, ${propertyAddress}</strong>.</p>
+      <p>This is usually because the uploaded document was unclear, expired, or didn't match the address.
+         You're welcome to resubmit with a clearer copy.</p>
+      <p style="margin-top:24px;font-size:13px;color:#6b7280">— YardYarns</p>
     `,
   })
 }
