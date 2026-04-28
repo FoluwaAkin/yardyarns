@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { NavLinks } from './NavLinks'
-import { NotificationBell } from './NotificationBell'
 
 export async function Navbar() {
   const supabase = await createClient()
@@ -9,14 +8,20 @@ export async function Navbar() {
 
   let username: string | null = null
   let avatar: string | null = null
+  let unreadCount = 0
+
   if (user) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('username, avatar')
-      .eq('id', user.id)
-      .single()
-    username = data?.username ?? null
-    avatar = data?.avatar ?? null
+    const [profileRes, bellRes] = await Promise.all([
+      supabase.from('profiles').select('username, avatar').eq('id', user.id).single(),
+      supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false),
+    ])
+    username = profileRes.data?.username ?? null
+    avatar = profileRes.data?.avatar ?? null
+    unreadCount = bellRes.error ? 0 : (bellRes.count ?? 0)
   }
 
   return (
@@ -26,8 +31,7 @@ export async function Navbar() {
           YardYarns
         </Link>
         <nav className="flex items-center gap-1">
-          {user && <NotificationBell userId={user.id} />}
-          <NavLinks username={username} avatar={avatar} />
+          <NavLinks username={username} avatar={avatar} unreadCount={unreadCount} />
         </nav>
       </div>
     </header>

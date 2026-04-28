@@ -2,15 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, LogIn } from 'lucide-react'
+import { Home, Search, LogIn, Bell } from 'lucide-react'
 import { EagleAvatar, type EaglePersonality } from '@/components/ui/EagleAvatar'
 
 interface Props {
   username: string | null
   avatar?: string | null
+  unreadCount?: number
 }
 
-export function NavLinks({ username, avatar = null }: Props) {
+export function NavLinks({ username, avatar = null, unreadCount = 0 }: Props) {
   const pathname = usePathname()
 
   function linkClass(href: string) {
@@ -33,10 +34,22 @@ export function NavLinks({ username, avatar = null }: Props) {
         <span className="hidden sm:inline">Search</span>
       </Link>
 
+      {username && (
+        <Link href="/notifications" className={`relative ${linkClass('/notifications')}`}>
+          <Bell size={16} />
+          {unreadCount > 0 && (
+            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 dark:bg-gray-100 text-[10px] font-bold text-white dark:text-gray-900">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
+      )}
+
       {username ? (
-        <Link href={`/u/${username}`} className={linkClass(`/u/${username}`)}>
-          <EagleAvatar personality={(avatar as EaglePersonality) ?? 'happy'} size={20} />
-          <span className="hidden sm:inline">@{username}</span>
+        <Link href={`/u/${username}`} className={`rounded-lg p-2 transition hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px] flex items-center ${
+          pathname.startsWith(`/u/${username}`) ? 'bg-gray-100 dark:bg-gray-700' : ''
+        }`}>
+          <EagleAvatar personality={(avatar as EaglePersonality) ?? 'happy'} size={26} showRing={pathname.startsWith(`/u/${username}`)} />
         </Link>
       ) : (
         <Link

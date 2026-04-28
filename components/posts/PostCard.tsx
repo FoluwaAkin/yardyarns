@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
-import { MapPin, MessageCircle } from 'lucide-react'
+import { MapPin, MessageCircle, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { LikeButton } from '@/components/feed/LikeButton'
 import { VerifiedBadge } from '@/components/feed/VerifiedBadge'
 import { CommentThread } from '@/components/comments/CommentThread'
 import { PostMedia } from './PostMedia'
+import { deletePost } from '@/app/(main)/u/[username]/actions'
 
 interface CommentRow {
   id: string
@@ -38,6 +39,7 @@ interface Props {
   hasLiked: boolean
   currentUserId: string | null
   currentUsername?: string | null
+  showDelete?: boolean
 }
 
 export function PostCard({
@@ -53,10 +55,16 @@ export function PostCard({
   hasLiked,
   currentUserId,
   currentUsername = null,
+  showDelete = false,
 }: Props) {
   const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState<CommentRow[] | null>(null)
   const [liveCount, setLiveCount] = useState(commentCount)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleted, setDeleted] = useState(false)
+
+  if (deleted) return null
 
   useEffect(() => {
     if (!showComments || comments !== null) return
@@ -134,6 +142,42 @@ export function PostCard({
           {liveCount > 0 && <span>{liveCount}</span>}
           <span>{showComments ? 'Hide' : 'Comment'}</span>
         </button>
+
+        {showDelete && (
+          <div className="ml-auto flex items-center gap-2">
+            {confirmDelete ? (
+              <>
+                <span className="text-xs text-gray-400 dark:text-gray-500">Delete post?</span>
+                <button
+                  disabled={deleting}
+                  onClick={async () => {
+                    setDeleting(true)
+                    const { error } = await deletePost(post.id)
+                    if (!error) setDeleted(true)
+                    else setDeleting(false)
+                  }}
+                  className="text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50 min-h-[40px] px-1"
+                >
+                  {deleting ? '…' : 'Yes'}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 min-h-[40px] px-1"
+                >
+                  No
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="p-2 text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition min-h-[40px]"
+                aria-label="Delete post"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Inline comments */}

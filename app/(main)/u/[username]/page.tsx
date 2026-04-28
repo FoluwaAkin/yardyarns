@@ -241,6 +241,7 @@ export default async function UserProfilePage({ params }: Props) {
                     hasLiked={userReviewLikes.has(r.id)}
                     currentUserId={user?.id ?? null}
                     currentUsername={isOwnProfile ? profile.username : null}
+                    showDelete={isOwnProfile}
                   />
                 )
               } else {
@@ -262,6 +263,7 @@ export default async function UserProfilePage({ params }: Props) {
                     hasLiked={userPostLikes.has(p.id)}
                     currentUserId={user?.id ?? null}
                     currentUsername={isOwnProfile ? profile.username : null}
+                    showDelete={isOwnProfile}
                   />
                 )
               }
