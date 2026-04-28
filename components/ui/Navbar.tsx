@@ -8,13 +8,15 @@ export async function Navbar() {
   const { data: { user } } = await supabase.auth.getUser()
 
   let username: string | null = null
+  let avatar: string | null = null
   if (user) {
     const { data } = await supabase
       .from('profiles')
-      .select('username')
+      .select('username, avatar')
       .eq('id', user.id)
       .single()
     username = data?.username ?? null
+    avatar = data?.avatar ?? null
   }
 
   return (
@@ -25,7 +27,7 @@ export async function Navbar() {
         </Link>
         <nav className="flex items-center gap-1">
           {user && <NotificationBell userId={user.id} />}
-          <NavLinks username={username} />
+          <NavLinks username={username} avatar={avatar} />
         </nav>
       </div>
     </header>

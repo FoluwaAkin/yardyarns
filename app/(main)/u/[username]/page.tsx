@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ReviewCard } from '@/components/review/ReviewCard'
 import { PostCard } from '@/components/posts/PostCard'
+import { EagleAvatar, type EaglePersonality } from '@/components/ui/EagleAvatar'
+import { AvatarPicker } from '@/components/profile/AvatarPicker'
 import { BadgeCheck, Clock, XCircle, FileText, Plus, Pencil } from 'lucide-react'
 
 const STATUS_META = {
@@ -21,7 +23,7 @@ export default async function UserProfilePage({ params }: Props) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, username, created_at')
+    .select('id, username, avatar, created_at')
     .eq('username', username)
     .single()
 
@@ -102,22 +104,46 @@ export default async function UserProfilePage({ params }: Props) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">@{profile.username}</h1>
-          <p className="text-sm text-gray-400 dark:text-gray-500">
-            {(reviews ?? []).length} review{(reviews ?? []).length !== 1 ? 's' : ''} ·{' '}
-            {(posts ?? []).length} post{(posts ?? []).length !== 1 ? 's' : ''}
-          </p>
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <EagleAvatar
+              personality={(profile.avatar as EaglePersonality) ?? 'happy'}
+              size={56}
+              showRing={isOwnProfile}
+            />
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">@{profile.username}</h1>
+              <p className="text-sm text-gray-400 dark:text-gray-500">
+                {(reviews ?? []).length} review{(reviews ?? []).length !== 1 ? 's' : ''} ·{' '}
+                {(posts ?? []).length} post{(posts ?? []).length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+          {isOwnProfile && (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/onboarding?next=/dashboard"
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <Pencil size={12} />
+                Username
+              </Link>
+              <form action="/auth/signout" method="post">
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400"
+                >
+                  Sign out
+                </button>
+              </form>
+            </div>
+          )}
         </div>
+
+        {/* Avatar picker — own profile only */}
         {isOwnProfile && (
-          <Link
-            href="/onboarding?next=/dashboard"
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
-            <Pencil size={12} />
-            Change username
-          </Link>
+          <AvatarPicker current={(profile.avatar as EaglePersonality) ?? 'happy'} />
         )}
       </div>
 

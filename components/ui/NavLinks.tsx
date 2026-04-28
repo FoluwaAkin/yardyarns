@@ -2,17 +2,19 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, User, LogIn, LogOut } from 'lucide-react'
+import { Home, Search, LogIn } from 'lucide-react'
+import { EagleAvatar, type EaglePersonality } from '@/components/ui/EagleAvatar'
 
 interface Props {
   username: string | null
+  avatar?: string | null
 }
 
-export function NavLinks({ username }: Props) {
+export function NavLinks({ username, avatar = null }: Props) {
   const pathname = usePathname()
 
   function linkClass(href: string) {
-    const isActive = pathname === href
+    const isActive = pathname === href || pathname.startsWith(href + '/')
     return `flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px] ${
       isActive
         ? 'font-medium text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700'
@@ -32,22 +34,10 @@ export function NavLinks({ username }: Props) {
       </Link>
 
       {username ? (
-        <>
-          <Link href={`/u/${username}`} className={linkClass(`/u/${username}`)}>
-            <User size={16} />
-            <span className="hidden sm:inline">@{username}</span>
-          </Link>
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              title="Sign out"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-600 dark:text-gray-400 transition hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 min-h-[40px]"
-            >
-              <LogOut size={16} />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </form>
-        </>
+        <Link href={`/u/${username}`} className={linkClass(`/u/${username}`)}>
+          <EagleAvatar personality={(avatar as EaglePersonality) ?? 'happy'} size={20} />
+          <span className="hidden sm:inline">@{username}</span>
+        </Link>
       ) : (
         <Link
           href="/auth/signin"
