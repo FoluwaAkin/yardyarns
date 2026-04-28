@@ -7,13 +7,17 @@ import { verifyTenancy, rejectTenancy } from './actions'
 export function VerificationActions({ tenancyId }: { tenancyId: string }) {
   const [loading, setLoading] = useState<'verify' | 'reject' | null>(null)
   const [done, setDone] = useState<'verified' | 'rejected' | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function handle(action: 'verify' | 'reject') {
     setLoading(action)
+    setError(null)
     try {
       if (action === 'verify') await verifyTenancy(tenancyId)
       else await rejectTenancy(tenancyId)
       setDone(action === 'verify' ? 'verified' : 'rejected')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
       setLoading(null)
     }
@@ -33,23 +37,26 @@ export function VerificationActions({ tenancyId }: { tenancyId: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => handle('verify')}
-        disabled={!!loading}
-        className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50 min-h-[36px]"
-      >
-        {loading === 'verify' ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-        Verify
-      </button>
-      <button
-        onClick={() => handle('reject')}
-        disabled={!!loading}
-        className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-50 min-h-[36px]"
-      >
-        {loading === 'reject' ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
-        Reject
-      </button>
+    <div className="flex flex-col items-end gap-1.5">
+      {error && <p className="text-xs text-red-500">{error}</p>}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => handle('verify')}
+          disabled={!!loading}
+          className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50 min-h-[36px]"
+        >
+          {loading === 'verify' ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+          Verify
+        </button>
+        <button
+          onClick={() => handle('reject')}
+          disabled={!!loading}
+          className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-50 min-h-[36px]"
+        >
+          {loading === 'reject' ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
+          Reject
+        </button>
+      </div>
     </div>
   )
 }

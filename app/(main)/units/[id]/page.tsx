@@ -192,6 +192,17 @@ export default async function UnitPage({ params, searchParams }: Props) {
       {/* Score panel */}
       <UnitScorePanel scores={(scores ?? []).map(s => ({ ...s, avg_score: Number(s.avg_score) }))} />
 
+      {/* Composers — below score, above feed */}
+      {user && (
+        <ComposerSection unitId={id} userId={user.id} tenancyId={userTenancyId} />
+      )}
+
+      {!user && (
+        <p className="text-sm text-gray-400 dark:text-gray-500">
+          <a href="/auth/signin" className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300">Sign in</a> to post or write a review.
+        </p>
+      )}
+
       {/* Feed filter */}
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -270,16 +281,6 @@ export default async function UnitPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* Composers — below the feed */}
-      {user && (
-        <ComposerSection unitId={id} userId={user.id} tenancyId={userTenancyId} />
-      )}
-
-      {!user && (
-        <p className="border-t border-gray-100 dark:border-gray-700/50 pt-6 text-sm text-gray-400 dark:text-gray-500">
-          <a href="/auth/signin" className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300">Sign in</a> to post or write a review.
-        </p>
-      )}
     </div>
   )
 }

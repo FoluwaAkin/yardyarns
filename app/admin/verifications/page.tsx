@@ -8,11 +8,13 @@ export default async function VerificationsPage() {
   const authClient = await createClient()
   const { data: { session } } = await authClient.auth.getSession()
 
+  if (!session) return null  // layout already redirects, this is a safety guard
+
   // Use JWT client so admin RLS policies fire
   const db = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { global: { headers: { Authorization: `Bearer ${session!.access_token}` } } }
+    { global: { headers: { Authorization: `Bearer ${session.access_token}` } } }
   )
 
   const { data: pending } = await db
