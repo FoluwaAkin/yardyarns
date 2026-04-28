@@ -91,34 +91,49 @@ export async function submitTenancy(formData: {
     unitId = newUnit.id
   }
 
-  // Duplicate guard — block if a non-rejected tenancy already exists for this user+unit
+  // Check for any existing tenancy for this user+unit
   const { data: existingTenancy } = await db
     .from('tenancies')
     .select('id, verification_status')
     .eq('user_id', user.id)
     .eq('unit_id', unitId)
-    .in('verification_status', ['pending', 'verified'])
     .maybeSingle()
 
   if (existingTenancy) {
     if (existingTenancy.verification_status === 'verified') {
       return { error: 'You already have a verified tenancy for this unit.' }
     }
-    return { error: 'You already submitted a verification request for this unit. We\'ll notify you once it\'s reviewed.' }
-  }
+    if (existingTenancy.verification_status === 'pending') {
+      return { error: "You already submitted a verification request for this unit. We'll notify you once it's reviewed." }
+    }
+    // Resubmission after rejection — UPDATE the existing row
+    const { error: updateError } = await db
+      .from('tenancies')
+      .update({
+        start_date: formData.startDate,
+        end_date: formData.endDate || null,
+        agreement_url: formData.agreementPath,
+        verification_status: 'pending',
+      })
+      .eq('id', existingTenancy.id)
 
-  // Insert tenancy
-  const { error: tenancyError } = await db.from('tenancies').insert({
-    user_id: user.id,
-    unit_id: unitId,
-    start_date: formData.startDate,
-    end_date: formData.endDate || null,
-    agreement_url: formData.agreementPath,
-    verification_status: 'pending',
-  })
+    if (updateError) {
+      return { error: updateError.message }
+    }
+  } else {
+    // Fresh submission — INSERT
+    const { error: tenancyError } = await db.from('tenancies').insert({
+      user_id: user.id,
+      unit_id: unitId,
+      start_date: formData.startDate,
+      end_date: formData.endDate || null,
+      agreement_url: formData.agreementPath,
+      verification_status: 'pending',
+    })
 
-  if (tenancyError) {
-    return { error: tenancyError.message }
+    if (tenancyError) {
+      return { error: tenancyError.message }
+    }
   }
 
   // Fetch username + email for the notification (best-effort — don't fail the request if it errors)

@@ -178,7 +178,7 @@ export default async function UserProfilePage({ params }: Props) {
             <div className="divide-y divide-gray-100 dark:divide-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
               {(tenancies ?? []).map((t) => {
                 const status = t.verification_status as keyof typeof STATUS_META
-                const meta = STATUS_META[status]
+                const meta = STATUS_META[status] ?? STATUS_META.pending
                 const unit = t.units as unknown as {
                   unit_identifier: string
                   property_id: string

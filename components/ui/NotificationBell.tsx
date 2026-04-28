@@ -4,13 +4,13 @@ import { Bell } from 'lucide-react'
 
 export async function NotificationBell({ userId }: { userId: string }) {
   const supabase = await createClient()
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from('notifications')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('read', false)
 
-  const unread = count ?? 0
+  const unread = error ? 0 : (count ?? 0)
 
   return (
     <Link
