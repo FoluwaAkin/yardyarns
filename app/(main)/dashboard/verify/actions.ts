@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
+import { sendTenancyNotification } from '@/lib/email'
 
 export async function submitTenancy(formData: {
   address: string
@@ -90,6 +91,22 @@ export async function submitTenancy(formData: {
     unitId = newUnit.id
   }
 
+  // Duplicate guard — block if a non-rejected tenancy already exists for this user+unit
+  const { data: existingTenancy } = await db
+    .from('tenancies')
+    .select('id, verification_status')
+    .eq('user_id', user.id)
+    .eq('unit_id', unitId)
+    .in('verification_status', ['pending', 'verified'])
+    .maybeSingle()
+
+  if (existingTenancy) {
+    if (existingTenancy.verification_status === 'verified') {
+      return { error: 'You already have a verified tenancy for this unit.' }
+    }
+    return { error: 'You already submitted a verification request for this unit. We\'ll notify you once it\'s reviewed.' }
+  }
+
   // Insert tenancy
   const { error: tenancyError } = await db.from('tenancies').insert({
     user_id: user.id,
@@ -103,6 +120,23 @@ export async function submitTenancy(formData: {
   if (tenancyError) {
     return { error: tenancyError.message }
   }
+
+  // Fetch username + email for the notification (best-effort — don't fail the request if it errors)
+  const [profileResult] = await Promise.all([
+    db.from('profiles').select('username').eq('id', user.id).single(),
+  ])
+
+  await sendTenancyNotification({
+    username: profileResult.data?.username ?? user.id,
+    userEmail: user.email ?? 'unknown',
+    propertyAddress: `${formData.address}, ${formData.city}, ${formData.state}`,
+    unitIdentifier: formData.unitIdentifier,
+    startDate: formData.startDate,
+    endDate: formData.endDate || null,
+    agreementPath: formData.agreementPath,
+  }).catch(() => {
+    // Swallow email errors — tenancy was saved successfully
+  })
 
   return { error: null }
 }
