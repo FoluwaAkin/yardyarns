@@ -75,8 +75,14 @@ function OnboardingForm() {
 
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ username: clean })
-      .eq('id', user.id)
+      .upsert(
+        {
+          id: user.id,
+          username: clean,
+          email_verified: !!user.email_confirmed_at,
+        },
+        { onConflict: 'id' }
+      )
 
     setLoading(false)
 
