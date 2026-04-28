@@ -70,13 +70,13 @@ export async function verifyTenancy(tenancyId: string) {
         p_title:   'Tenancy verified',
         p_body:    `Your tenancy at ${unitLabel}${address ? ', ' + address : ''} has been verified. Your ratings now count.`,
         p_link:    '/notifications',
-      }).catch(() => {}),
+      }).then(undefined, () => {}),
       sendTenancyVerified({
         userId: tenancy.user_id,
         username: profile?.username ?? '',
         unitIdentifier: unitLabel,
         propertyAddress: address,
-      }).catch(() => {}),
+      }).then(undefined, () => {}),
     ])
   }
 
@@ -109,13 +109,13 @@ export async function rejectTenancy(tenancyId: string) {
         p_title:   'Tenancy not verified',
         p_body:    `We couldn't verify your tenancy at ${unitLabel}${address ? ', ' + address : ''}. You can resubmit with a clearer document.`,
         p_link:    '/dashboard/verify',
-      }).catch(() => {}),
+      }).then(undefined, () => {}),
       sendTenancyRejected({
         userId: tenancy.user_id,
         username: profile?.username ?? '',
         unitIdentifier: unitLabel,
         propertyAddress: address,
-      }).catch(() => {}),
+      }).then(undefined, () => {}),
     ])
   }
 
