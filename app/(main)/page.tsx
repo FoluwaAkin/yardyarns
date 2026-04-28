@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { ReviewCard } from '@/components/review/ReviewCard'
 import { PostCard } from '@/components/posts/PostCard'
 import { FeedFilter } from '@/components/feed/FeedFilter'
+import { ContributeFlow } from '@/components/home/ContributeFlow'
 import type { FeedFilter as FeedFilterType } from '@/types'
-import { Search } from 'lucide-react'
 
 interface Props {
   searchParams: Promise<{ filter?: string }>
@@ -16,6 +16,12 @@ export default async function HomePage({ searchParams }: Props) {
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  let username: string | null = null
+  if (user) {
+    const { data } = await supabase.from('profiles').select('username').eq('id', user.id).single()
+    username = data?.username ?? null
+  }
 
   // Fetch latest reviews with joins
   const { data: rawReviews } = await supabase
@@ -112,14 +118,8 @@ export default async function HomePage({ searchParams }: Props) {
         </p>
       </div>
 
-      {/* Search CTA */}
-      <Link
-        href="/search"
-        className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 shadow-sm dark:shadow-gray-900 transition hover:border-gray-300 dark:hover:border-gray-600 hover:shadow"
-      >
-        <Search size={15} />
-        Search for a property or estate…
-      </Link>
+      {/* Contribute CTAs */}
+      <ContributeFlow currentUserId={user?.id ?? null} currentUsername={username} />
 
       {/* Feed filter */}
       <div className="flex items-center justify-between">

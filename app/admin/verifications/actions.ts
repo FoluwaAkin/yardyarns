@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { sendTenancyVerified, sendTenancyRejected } from '@/lib/email'
@@ -30,7 +30,8 @@ async function getAdminDb() {
   return db
 }
 
-async function getTenancyWithUser(db: ReturnType<typeof createSupabaseClient>, tenancyId: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getTenancyWithUser(db: SupabaseClient<any>, tenancyId: string) {
   const { data } = await db
     .from('tenancies')
     .select(`

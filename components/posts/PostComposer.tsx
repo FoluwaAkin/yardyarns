@@ -10,9 +10,10 @@ const MAX_CHARS = 500
 interface Props {
   unitId: string
   userId: string
+  onSuccess?: () => void
 }
 
-export function PostComposer({ unitId, userId }: Props) {
+export function PostComposer({ unitId, userId, onSuccess }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const [body, setBody] = useState('')
@@ -37,7 +38,11 @@ export function PostComposer({ unitId, userId }: Props) {
       setError(insertError.message)
     } else {
       setBody('')
-      router.refresh()
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.refresh()
+      }
     }
   }
 

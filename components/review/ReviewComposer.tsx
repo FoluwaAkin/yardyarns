@@ -11,6 +11,7 @@ interface Props {
   unitId: string
   userId: string
   tenancyId: string | null  // null = unverified
+  onSuccess?: () => void
 }
 
 const CURRENT_MONTH_START = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd')
@@ -49,7 +50,7 @@ function StarRating({
   )
 }
 
-export function ReviewComposer({ unitId, userId, tenancyId }: Props) {
+export function ReviewComposer({ unitId, userId, tenancyId, onSuccess }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -127,7 +128,11 @@ export function ReviewComposer({ unitId, userId, tenancyId }: Props) {
 
     setBody('')
     setScores({})
-    router.refresh()
+    if (onSuccess) {
+      onSuccess()
+    } else {
+      router.refresh()
+    }
   }
 
   return (
