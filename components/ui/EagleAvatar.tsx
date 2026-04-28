@@ -1,3 +1,5 @@
+import type { JSX } from 'react'
+
 export type EaglePersonality = 'happy' | 'sad' | 'curious' | 'excited' | 'angry'
 
 const BG: Record<EaglePersonality, string> = {
