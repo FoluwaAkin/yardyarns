@@ -56,7 +56,7 @@ export default async function UserProfilePage({ params }: Props) {
     supabase
       .from('posts')
       .select(`
-        id, body, created_at, unit_id, user_id,
+        id, body, created_at, unit_id, user_id, media_urls,
         profiles!posts_user_id_fkey(username),
         units(unit_identifier, property_id, properties(id, address, city))
       `)
@@ -256,6 +256,7 @@ export default async function UserProfilePage({ params }: Props) {
                     unitLabel={unitData?.unit_identifier ?? ''}
                     propertyAddress={unitData?.properties ? `${unitData.properties.address}, ${unitData.properties.city}` : ''}
                     propertyId={unitData?.properties?.id ?? unitData?.property_id ?? ''}
+                    mediaUrls={(p.media_urls as string[]) ?? []}
                     likeCount={countFor(plc.data ?? [], p.id, 'post_id')}
                     commentCount={countFor(pcc.data ?? [], p.id, 'post_id')}
                     hasLiked={userPostLikes.has(p.id)}

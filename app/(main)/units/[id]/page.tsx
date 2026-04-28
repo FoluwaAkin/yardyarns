@@ -78,7 +78,7 @@ export default async function UnitPage({ params, searchParams }: Props) {
   const { data: rawPosts } = await supabase
     .from('posts')
     .select(`
-      id, body, created_at, unit_id, user_id,
+      id, body, created_at, unit_id, user_id, media_urls,
       profiles!posts_user_id_fkey(username),
       tenancies!inner(verification_status)
     `)
@@ -261,6 +261,7 @@ export default async function UnitPage({ params, searchParams }: Props) {
                     unitLabel={unit.unit_identifier}
                     propertyAddress={propertyAddress}
                     propertyId={unit.property_id}
+                    mediaUrls={(p.media_urls as string[]) ?? []}
                     likeCount={countFor(postLikeCounts.data ?? [], p.id, 'post_id')}
                     commentCount={countFor(postCommentCounts.data ?? [], p.id, 'post_id')}
                     hasLiked={userPostLikes.has(p.id)}

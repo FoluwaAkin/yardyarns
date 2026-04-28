@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { LikeButton } from '@/components/feed/LikeButton'
 import { VerifiedBadge } from '@/components/feed/VerifiedBadge'
 import { CommentThread } from '@/components/comments/CommentThread'
+import { PostMedia } from './PostMedia'
 
 interface CommentRow {
   id: string
@@ -31,6 +32,7 @@ interface Props {
   unitLabel: string
   propertyAddress: string
   propertyId: string
+  mediaUrls?: string[]
   likeCount: number
   commentCount: number
   hasLiked: boolean
@@ -45,6 +47,7 @@ export function PostCard({
   unitLabel,
   propertyAddress,
   propertyId,
+  mediaUrls = [],
   likeCount,
   commentCount,
   hasLiked,
@@ -108,7 +111,12 @@ export function PostCard({
       </div>
 
       {/* Body */}
-      <p className="mb-4 text-sm leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{post.body}</p>
+      {post.body && (
+        <p className="mb-4 text-sm leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{post.body}</p>
+      )}
+
+      {/* Media */}
+      <PostMedia urls={mediaUrls} />
 
       {/* Actions */}
       <div className="flex items-center gap-4 border-t border-gray-100 dark:border-gray-700/50 pt-3">

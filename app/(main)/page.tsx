@@ -40,7 +40,7 @@ export default async function HomePage({ searchParams }: Props) {
   const { data: rawPosts } = await supabase
     .from('posts')
     .select(`
-      id, body, created_at, unit_id, user_id,
+      id, body, created_at, unit_id, user_id, media_urls,
       profiles!posts_user_id_fkey(username),
       units(unit_identifier, property_id, properties(id, address, city))
     `)
@@ -193,6 +193,7 @@ export default async function HomePage({ searchParams }: Props) {
                       : ''
                   }
                   propertyId={unitData?.properties?.id ?? unitData?.property_id ?? ''}
+                  mediaUrls={(p.media_urls as string[]) ?? []}
                   likeCount={countFor(postLikeCounts.data ?? [], p.id, 'post_id')}
                   commentCount={countFor(postCommentCounts.data ?? [], p.id, 'post_id')}
                   hasLiked={userPostLikes.has(p.id)}
