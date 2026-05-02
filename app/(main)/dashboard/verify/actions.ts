@@ -33,13 +33,31 @@ export async function submitTenancy(formData: {
     { global: { headers: { Authorization: `Bearer ${session.access_token}` } } }
   )
 
-  // Find or create property
-  const { data: existingProperty } = await db
-    .from('properties')
-    .select('id')
-    .ilike('address', formData.address.trim())
-    .ilike('city', formData.city.trim())
-    .maybeSingle()
+  // Find or create property — prefer lat/lng match (precise) over address string match
+  let existingProperty: { id: string } | null = null
+
+  if (formData.lat !== null && formData.lng !== null) {
+    // ~55m radius: 0.0005 degrees ≈ 55m at the equator
+    const { data: nearby } = await db
+      .from('properties')
+      .select('id')
+      .gte('lat', formData.lat - 0.0005)
+      .lte('lat', formData.lat + 0.0005)
+      .gte('lng', formData.lng - 0.0005)
+      .lte('lng', formData.lng + 0.0005)
+      .maybeSingle()
+    existingProperty = nearby ?? null
+  }
+
+  if (!existingProperty) {
+    const { data: byAddress } = await db
+      .from('properties')
+      .select('id')
+      .ilike('address', formData.address.trim())
+      .ilike('city', formData.city.trim())
+      .maybeSingle()
+    existingProperty = byAddress ?? null
+  }
 
   let propertyId: string
 

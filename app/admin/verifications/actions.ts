@@ -36,6 +36,7 @@ async function getTenancyWithUser(db: any, tenancyId: string) {
     .from('tenancies')
     .select(`
       user_id,
+      unit_id,
       profiles!tenancies_user_id_fkey(username),
       units(unit_identifier, properties(address, city, state))
     `)
@@ -55,6 +56,15 @@ export async function verifyTenancy(tenancyId: string) {
     .eq('id', tenancyId)
 
   if (error) throw new Error(error.message)
+
+  // Retroactively link any reviews this user wrote for the same unit before verifying
+  if (tenancy?.unit_id) {
+    await db.rpc('link_reviews_to_tenancy', {
+      p_tenancy_id: tenancyId,
+      p_user_id:    tenancy.user_id,
+      p_unit_id:    tenancy.unit_id,
+    }).then(undefined, () => {})
+  }
 
   // In-app + email notifications — best-effort
   if (tenancy) {
