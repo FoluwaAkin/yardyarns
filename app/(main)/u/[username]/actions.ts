@@ -8,11 +8,25 @@ export async function deletePost(postId: string): Promise<{ error: string | null
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
+  const { data: post } = await supabase
+    .from('posts')
+    .select('media_urls')
+    .eq('id', postId)
+    .eq('user_id', user.id)
+    .single()
+
   const { error } = await supabase
     .from('posts')
     .delete()
     .eq('id', postId)
     .eq('user_id', user.id)
+
+  if (!error && post?.media_urls?.length) {
+    const paths = post.media_urls
+      .map((url: string) => url.split('/post-media/')[1])
+      .filter(Boolean)
+    if (paths.length) await supabase.storage.from('post-media').remove(paths)
+  }
 
   return { error: error?.message ?? null }
 }
