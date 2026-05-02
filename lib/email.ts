@@ -1,7 +1,10 @@
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  if (!process.env.RESEND_API_KEY) return null
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 /** Look up a user's email from auth.users — requires service role key */
 async function getUserEmail(userId: string): Promise<string | null> {
@@ -32,7 +35,8 @@ export async function sendTenancyNotification({
   agreementPath: string
 }) {
   const adminEmail = process.env.ADMIN_EMAIL
-  if (!adminEmail || !process.env.RESEND_API_KEY) return
+  const resend = getResend()
+  if (!adminEmail || !resend) return
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const agreementUrl = `${supabaseUrl}/storage/v1/object/tenancy-agreements/${agreementPath}`
@@ -70,7 +74,8 @@ export async function sendTenancyVerified({
   unitIdentifier: string
   propertyAddress: string
 }) {
-  if (!process.env.RESEND_API_KEY) return
+  const resend = getResend()
+  if (!resend) return
   const email = await getUserEmail(userId)
   if (!email) return
 
@@ -99,7 +104,8 @@ export async function sendTenancyRejected({
   unitIdentifier: string
   propertyAddress: string
 }) {
-  if (!process.env.RESEND_API_KEY) return
+  const resend = getResend()
+  if (!resend) return
   const email = await getUserEmail(userId)
   if (!email) return
 
