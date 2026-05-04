@@ -22,11 +22,23 @@ export default async function SearchPage({ searchParams }: Props) {
   }[] = []
 
   if (q && q.trim().length > 0) {
-    const term = `%${q.trim()}%`
+    // Split on commas so "The Juliana, Ilasan" searches both tokens independently
+    const tokens = q.trim().split(',').map(t => t.trim()).filter(Boolean)
+    const conditions = tokens
+      .flatMap(token => {
+        const term = `%${token}%`
+        return [
+          `address.ilike.${term}`,
+          `city.ilike.${term}`,
+          `state.ilike.${term}`,
+          `name.ilike.${term}`,
+        ]
+      })
+      .join(',')
     const { data } = await supabase
       .from('properties')
       .select('id, name, address, city, state')
-      .or(`address.ilike.${term},city.ilike.${term},state.ilike.${term},name.ilike.${term}`)
+      .or(conditions)
       .limit(30)
     properties = data ?? []
   }

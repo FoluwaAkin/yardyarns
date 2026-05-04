@@ -64,11 +64,22 @@ export function ContributeFlow({
     }
     setSearching(true)
     const timer = setTimeout(async () => {
-      const term = `%${query.trim()}%`
+      const tokens = query.trim().split(',').map(t => t.trim()).filter(Boolean)
+      const conditions = tokens
+        .flatMap(token => {
+          const term = `%${token}%`
+          return [
+            `address.ilike.${term}`,
+            `city.ilike.${term}`,
+            `state.ilike.${term}`,
+            `name.ilike.${term}`,
+          ]
+        })
+        .join(',')
       const { data } = await supabaseRef.current
         .from('properties')
         .select('id, name, address, city, state')
-        .or(`address.ilike.${term},city.ilike.${term},state.ilike.${term},name.ilike.${term}`)
+        .or(conditions)
         .limit(8)
       setProperties(data ?? [])
       setSearching(false)
