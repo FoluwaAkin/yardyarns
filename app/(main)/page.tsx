@@ -47,6 +47,19 @@ export default async function HomePage({ searchParams }: Props) {
     .order('created_at', { ascending: false })
     .limit(30)
 
+  // Verified post authors: which (user_id, unit_id) pairs have verified tenancies
+  const postUserIds = [...new Set((rawPosts ?? []).map((p) => p.user_id))]
+  const { data: verifiedPostTenancies } = postUserIds.length
+    ? await supabase
+        .from('tenancies')
+        .select('user_id, unit_id')
+        .eq('verification_status', 'verified')
+        .in('user_id', postUserIds)
+    : { data: [] }
+  const verifiedPostKeys = new Set(
+    (verifiedPostTenancies ?? []).map((t) => `${t.user_id}:${t.unit_id}`)
+  )
+
   // User likes
   let userReviewLikes = new Set<string>()
   let userPostLikes = new Set<string>()
@@ -96,7 +109,12 @@ export default async function HomePage({ searchParams }: Props) {
     return true
   })
 
-  const posts = feedFilter === 'verified' ? [] : (rawPosts ?? [])
+  const posts = (rawPosts ?? []).filter((p) => {
+    const isVerified = verifiedPostKeys.has(`${p.user_id}:${p.unit_id}`)
+    if (feedFilter === 'verified') return isVerified
+    if (feedFilter === 'unverified') return !isVerified
+    return true
+  })
 
   // Interleave by created_at
   type FeedItem =
@@ -185,7 +203,7 @@ export default async function HomePage({ searchParams }: Props) {
                   key={p.id}
                   post={p}
                   username={profile?.username ?? 'unknown'}
-                  isVerified={false}
+                  isVerified={verifiedPostKeys.has(`${p.user_id}:${p.unit_id}`)}
                   unitLabel={unitData?.unit_identifier ?? ''}
                   propertyAddress={
                     unitData?.properties

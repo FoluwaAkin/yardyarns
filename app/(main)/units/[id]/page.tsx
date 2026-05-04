@@ -79,11 +79,24 @@ export default async function UnitPage({ params, searchParams }: Props) {
     .from('posts')
     .select(`
       id, body, created_at, unit_id, user_id, media_urls,
-      profiles!posts_user_id_fkey(username),
-      tenancies!inner(verification_status)
+      profiles!posts_user_id_fkey(username)
     `)
     .eq('unit_id', id)
     .order('created_at', { ascending: false })
+
+  // Verified post authors: check which post authors have a verified tenancy for this unit
+  const postUserIds = [...new Set((rawPosts ?? []).map((p) => p.user_id))]
+  const { data: verifiedPostTenancies } = postUserIds.length
+    ? await supabase
+        .from('tenancies')
+        .select('user_id, unit_id')
+        .eq('verification_status', 'verified')
+        .eq('unit_id', id)
+        .in('user_id', postUserIds)
+    : { data: [] }
+  const verifiedPostKeys = new Set(
+    (verifiedPostTenancies ?? []).map((t) => `${t.user_id}:${t.unit_id}`)
+  )
 
   // Likes for current user (if logged in)
   let userReviewLikes = new Set<string>()
@@ -154,8 +167,9 @@ export default async function UnitPage({ params, searchParams }: Props) {
   })
 
   const posts = (rawPosts ?? []).filter((p) => {
-    // Posts don't have tenancies join in this query; treat all as unverified for filtering
-    if (feedFilter === 'verified') return false  // Posts never count as verified
+    const isVerified = verifiedPostKeys.has(`${p.user_id}:${p.unit_id}`)
+    if (feedFilter === 'verified') return isVerified
+    if (feedFilter === 'unverified') return !isVerified
     return true
   })
 
@@ -257,7 +271,7 @@ export default async function UnitPage({ params, searchParams }: Props) {
                   <PostCard
                     post={p}
                     username={profile?.username ?? 'unknown'}
-                    isVerified={false}
+                    isVerified={verifiedPostKeys.has(`${p.user_id}:${p.unit_id}`)}
                     unitLabel={unit.unit_identifier}
                     propertyAddress={propertyAddress}
                     propertyId={unit.property_id}

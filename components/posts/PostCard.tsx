@@ -64,8 +64,6 @@ export function PostCard({
   const [deleting, setDeleting] = useState(false)
   const [deleted, setDeleted] = useState(false)
 
-  if (deleted) return null
-
   useEffect(() => {
     if (!showComments || comments !== null) return
     const supabase = createClient()
@@ -87,6 +85,8 @@ export function PostCard({
         setLiveCount(rows.filter((r) => !r.parent_id).length)
       })
   }, [showComments, post.id, comments])
+
+  if (deleted) return null
 
   return (
     <article className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm dark:shadow-gray-900">

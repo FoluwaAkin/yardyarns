@@ -67,6 +67,20 @@ export default async function UserProfilePage({ params }: Props) {
 
   const tenancies = tenancyResult.data
 
+  // Verified post authors for this user's posts
+  const postUnitIds = [...new Set((posts ?? []).map((p) => p.unit_id))]
+  const { data: verifiedPostTenancies } = postUnitIds.length
+    ? await supabase
+        .from('tenancies')
+        .select('user_id, unit_id')
+        .eq('verification_status', 'verified')
+        .eq('user_id', profile.id)
+        .in('unit_id', postUnitIds)
+    : { data: [] }
+  const verifiedPostKeys = new Set(
+    (verifiedPostTenancies ?? []).map((t) => `${t.user_id}:${t.unit_id}`)
+  )
+
   // Like counts
   const reviewIds = (reviews ?? []).map((r) => r.id)
   const postIds = (posts ?? []).map((p) => p.id)
@@ -253,7 +267,7 @@ export default async function UserProfilePage({ params }: Props) {
                     key={p.id}
                     post={p}
                     username={profileData?.username ?? username}
-                    isVerified={false}
+                    isVerified={verifiedPostKeys.has(`${p.user_id}:${p.unit_id}`)}
                     unitLabel={unitData?.unit_identifier ?? ''}
                     propertyAddress={unitData?.properties ? `${unitData.properties.address}, ${unitData.properties.city}` : ''}
                     propertyId={unitData?.properties?.id ?? unitData?.property_id ?? ''}
