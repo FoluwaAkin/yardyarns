@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createActionClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { sendTenancyNotification } from '@/lib/email'
@@ -18,7 +18,7 @@ export async function submitTenancy(formData: {
   agreementPath: string
 }) {
   // Validate the user via the cookie-based session client
-  const authClient = await createClient()
+  const authClient = await createActionClient()
   const { data: { session } } = await authClient.auth.getSession()
   if (!session) redirect('/auth/signin?redirectTo=/dashboard/verify')
 

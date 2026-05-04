@@ -1,10 +1,10 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createActionClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export async function markAllRead() {
-  const supabase = await createClient()
+  const supabase = await createActionClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 

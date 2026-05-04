@@ -1,10 +1,10 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createActionClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export async function deletePost(postId: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
+  const supabase = await createActionClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
@@ -32,7 +32,7 @@ export async function deletePost(postId: string): Promise<{ error: string | null
 }
 
 export async function deleteReview(reviewId: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
+  const supabase = await createActionClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
@@ -46,7 +46,7 @@ export async function deleteReview(reviewId: string): Promise<{ error: string | 
 }
 
 export async function updateAvatar(avatar: string) {
-  const supabase = await createClient()
+  const supabase = await createActionClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 

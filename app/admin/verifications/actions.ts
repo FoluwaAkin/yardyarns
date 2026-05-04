@@ -1,13 +1,13 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createActionClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { sendTenancyVerified, sendTenancyRejected } from '@/lib/email'
 
 async function getAdminDb() {
-  const authClient = await createClient()
+  const authClient = await createActionClient()
   const { data: { session } } = await authClient.auth.getSession()
   if (!session) redirect('/auth/signin')
 
