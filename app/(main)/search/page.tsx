@@ -26,7 +26,7 @@ export default async function SearchPage({ searchParams }: Props) {
     const { data } = await supabase
       .from('properties')
       .select('id, name, address, city, state')
-      .or(`address.ilike.${term},city.ilike.${term},name.ilike.${term}`)
+      .or(`address.ilike.${term},city.ilike.${term},state.ilike.${term},name.ilike.${term}`)
       .limit(30)
     properties = data ?? []
   }

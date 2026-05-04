@@ -68,7 +68,7 @@ export function ContributeFlow({
       const { data } = await supabaseRef.current
         .from('properties')
         .select('id, name, address, city, state')
-        .or(`address.ilike.${term},city.ilike.${term},name.ilike.${term}`)
+        .or(`address.ilike.${term},city.ilike.${term},state.ilike.${term},name.ilike.${term}`)
         .limit(8)
       setProperties(data ?? [])
       setSearching(false)
