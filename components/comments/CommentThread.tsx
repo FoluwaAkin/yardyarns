@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { createClient } from '@/lib/supabase/client'
 import { Loader2, CornerDownRight } from 'lucide-react'
+import { addComment } from '@/app/actions/comments'
 
 interface Comment {
   id: string
@@ -69,23 +69,12 @@ export function CommentThread({
   currentUserId,
   currentUsername,
 }: Props) {
-  const supabase = createClient()
   const [comments, setComments] = useState<Comment[]>(initialComments)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
   async function submitComment(body: string, parentId: string | null = null) {
     if (!currentUserId) return
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({
-        review_id: reviewId ?? null,
-        post_id: postId ?? null,
-        user_id: currentUserId,
-        parent_id: parentId,
-        body,
-      })
-      .select('id, body, created_at, user_id, parent_id')
-      .single()
+    const { data, error } = await addComment({ body, postId, reviewId, parentId })
 
     if (!error && data) {
       setComments((prev) => [

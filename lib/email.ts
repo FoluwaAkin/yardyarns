@@ -1,21 +1,11 @@
 import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) return null
   return new Resend(process.env.RESEND_API_KEY)
 }
 
-/** Look up a user's email from auth.users — requires service role key */
-async function getUserEmail(userId: string): Promise<string | null> {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return null
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-  )
-  const { data } = await admin.auth.admin.getUserById(userId)
-  return data.user?.email ?? null
-}
+const FROM = 'YardYarns <notifications@yardyarns.com>'
 
 export async function sendTenancyNotification({
   username,
@@ -42,7 +32,7 @@ export async function sendTenancyNotification({
   const agreementUrl = `${supabaseUrl}/storage/v1/object/tenancy-agreements/${agreementPath}`
 
   await resend.emails.send({
-    from: 'YardYarns <notifications@yardyarns.com>',
+    from: FROM,
     to: adminEmail,
     subject: `New tenancy verification request from @${username}`,
     html: `
@@ -64,23 +54,21 @@ export async function sendTenancyNotification({
 }
 
 export async function sendTenancyVerified({
-  userId,
+  email,
   username,
   unitIdentifier,
   propertyAddress,
 }: {
-  userId: string
+  email: string
   username: string
   unitIdentifier: string
   propertyAddress: string
 }) {
   const resend = getResend()
-  if (!resend) return
-  const email = await getUserEmail(userId)
-  if (!email) return
+  if (!resend || !email) return
 
   await resend.emails.send({
-    from: 'YardYarns <notifications@yardyarns.com>',
+    from: FROM,
     to: email,
     subject: 'Your tenancy has been verified ✓',
     html: `
@@ -94,23 +82,21 @@ export async function sendTenancyVerified({
 }
 
 export async function sendTenancyRejected({
-  userId,
+  email,
   username,
   unitIdentifier,
   propertyAddress,
 }: {
-  userId: string
+  email: string
   username: string
   unitIdentifier: string
   propertyAddress: string
 }) {
   const resend = getResend()
-  if (!resend) return
-  const email = await getUserEmail(userId)
-  if (!email) return
+  if (!resend || !email) return
 
   await resend.emails.send({
-    from: 'YardYarns <notifications@yardyarns.com>',
+    from: FROM,
     to: email,
     subject: 'Your tenancy verification was not approved',
     html: `
@@ -119,6 +105,73 @@ export async function sendTenancyRejected({
       <p>We were unable to verify your tenancy at <strong>${unitIdentifier}, ${propertyAddress}</strong>.</p>
       <p>This is usually because the uploaded document was unclear, expired, or didn't match the address.
          You're welcome to resubmit with a clearer copy.</p>
+      <p style="margin-top:24px;font-size:13px;color:#6b7280">— YardYarns</p>
+    `,
+  })
+}
+
+export async function sendLikeNotification({
+  recipientEmail,
+  actorUsername,
+  contentType,
+}: {
+  recipientEmail: string
+  actorUsername: string
+  contentType: 'post' | 'review'
+}) {
+  const resend = getResend()
+  if (!resend) return
+
+  await resend.emails.send({
+    from: FROM,
+    to: recipientEmail,
+    subject: `@${actorUsername} liked your ${contentType}`,
+    html: `
+      <p><strong>@${actorUsername}</strong> liked your ${contentType} on YardYarns.</p>
+      <p style="margin-top:24px;font-size:13px;color:#6b7280">— YardYarns</p>
+    `,
+  })
+}
+
+export async function sendCommentNotification({
+  recipientEmail,
+  actorUsername,
+  contentType,
+}: {
+  recipientEmail: string
+  actorUsername: string
+  contentType: 'post' | 'review'
+}) {
+  const resend = getResend()
+  if (!resend) return
+
+  await resend.emails.send({
+    from: FROM,
+    to: recipientEmail,
+    subject: `@${actorUsername} commented on your ${contentType}`,
+    html: `
+      <p><strong>@${actorUsername}</strong> commented on your ${contentType} on YardYarns.</p>
+      <p style="margin-top:24px;font-size:13px;color:#6b7280">— YardYarns</p>
+    `,
+  })
+}
+
+export async function sendReplyNotification({
+  recipientEmail,
+  actorUsername,
+}: {
+  recipientEmail: string
+  actorUsername: string
+}) {
+  const resend = getResend()
+  if (!resend) return
+
+  await resend.emails.send({
+    from: FROM,
+    to: recipientEmail,
+    subject: `@${actorUsername} replied to your comment`,
+    html: `
+      <p><strong>@${actorUsername}</strong> replied to your comment on YardYarns.</p>
       <p style="margin-top:24px;font-size:13px;color:#6b7280">— YardYarns</p>
     `,
   })

@@ -6,6 +6,11 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { sendTenancyVerified, sendTenancyRejected } from '@/lib/email'
 
+async function getRecipientEmail(db: Awaited<ReturnType<typeof createActionClient>>, userId: string): Promise<string> {
+  const { data } = await db.rpc('get_notification_email', { p_user_id: userId })
+  return data ?? ''
+}
+
 async function getAdminDb() {
   const authClient = await createActionClient()
   const { data: { session } } = await authClient.auth.getSession()
@@ -73,6 +78,7 @@ export async function verifyTenancy(tenancyId: string) {
     const unitLabel = unit?.unit_identifier ?? ''
     const address = unit?.properties ? `${unit.properties.address}, ${unit.properties.city}` : ''
 
+    const recipientEmail = await getRecipientEmail(db, tenancy.user_id).catch(() => '')
     await Promise.all([
       db.rpc('create_notification', {
         p_user_id: tenancy.user_id,
@@ -82,7 +88,7 @@ export async function verifyTenancy(tenancyId: string) {
         p_link:    '/notifications',
       }).then(undefined, () => {}),
       sendTenancyVerified({
-        userId: tenancy.user_id,
+        email: recipientEmail,
         username: profile?.username ?? '',
         unitIdentifier: unitLabel,
         propertyAddress: address,
@@ -112,6 +118,7 @@ export async function rejectTenancy(tenancyId: string) {
     const unitLabel = unit?.unit_identifier ?? ''
     const address = unit?.properties ? `${unit.properties.address}, ${unit.properties.city}` : ''
 
+    const recipientEmail = await getRecipientEmail(db, tenancy.user_id).catch(() => '')
     await Promise.all([
       db.rpc('create_notification', {
         p_user_id: tenancy.user_id,
@@ -121,7 +128,7 @@ export async function rejectTenancy(tenancyId: string) {
         p_link:    '/dashboard/verify',
       }).then(undefined, () => {}),
       sendTenancyRejected({
-        userId: tenancy.user_id,
+        email: recipientEmail,
         username: profile?.username ?? '',
         unitIdentifier: unitLabel,
         propertyAddress: address,

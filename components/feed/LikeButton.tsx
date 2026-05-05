@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Heart } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { toggleLike } from '@/app/actions/likes'
 
 interface Props {
   reviewId?: string
@@ -13,7 +13,6 @@ interface Props {
 }
 
 export function LikeButton({ reviewId, postId, initialCount, initialLiked, userId }: Props) {
-  const supabase = createClient()
   const [liked, setLiked] = useState(initialLiked)
   const [count, setCount] = useState(initialCount)
   const [loading, setLoading] = useState(false)
@@ -22,21 +21,15 @@ export function LikeButton({ reviewId, postId, initialCount, initialLiked, userI
     if (!userId) return
     setLoading(true)
 
-    if (liked) {
-      const query = supabase.from('likes').delete().eq('user_id', userId)
-      if (reviewId) await query.eq('review_id', reviewId).is('post_id', null)
-      else await query.eq('post_id', postId!).is('review_id', null)
+    const wasLiked = liked
+    setLiked(!wasLiked)
+    setCount((c) => (wasLiked ? c - 1 : c + 1))
 
-      setLiked(false)
-      setCount((c) => c - 1)
-    } else {
-      await supabase.from('likes').insert({
-        review_id: reviewId ?? null,
-        post_id: postId ?? null,
-        user_id: userId,
-      })
-      setLiked(true)
-      setCount((c) => c + 1)
+    const result = await toggleLike({ reviewId, postId, currentlyLiked: wasLiked })
+
+    if (result.error) {
+      setLiked(wasLiked)
+      setCount((c) => (wasLiked ? c + 1 : c - 1))
     }
 
     setLoading(false)
