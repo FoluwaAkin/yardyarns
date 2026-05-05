@@ -30,8 +30,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Protect /dashboard and /review routes — require auth
-  const requiresAuth = pathname.startsWith('/dashboard') || pathname.startsWith('/review')
+  // Protect /dashboard, /review, and /account routes — require auth
+  const requiresAuth = pathname.startsWith('/dashboard') || pathname.startsWith('/review') || pathname.startsWith('/account')
   if (!user && requiresAuth) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/signin'

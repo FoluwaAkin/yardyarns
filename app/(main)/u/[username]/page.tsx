@@ -5,7 +5,7 @@ import { ReviewCard } from '@/components/review/ReviewCard'
 import { PostCard } from '@/components/posts/PostCard'
 import { EagleAvatar, type EaglePersonality } from '@/components/ui/EagleAvatar'
 import { AvatarPicker } from '@/components/profile/AvatarPicker'
-import { BadgeCheck, Clock, XCircle, FileText, Plus, Pencil } from 'lucide-react'
+import { BadgeCheck, Clock, XCircle, FileText, Plus, Pencil, KeyRound } from 'lucide-react'
 
 const STATUS_META = {
   pending: { label: 'Under review', icon: Clock, className: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' },
@@ -142,6 +142,13 @@ export default async function UserProfilePage({ params }: Props) {
               >
                 <Pencil size={12} />
                 Username
+              </Link>
+              <Link
+                href="/account/password"
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <KeyRound size={12} />
+                Password
               </Link>
               <form action="/auth/signout" method="post">
                 <button
