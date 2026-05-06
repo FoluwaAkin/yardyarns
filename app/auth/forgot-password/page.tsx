@@ -2,14 +2,20 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
+import { Suspense } from 'react'
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const linkExpired = searchParams.get('error') === 'link_expired'
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    linkExpired ? 'That reset link has expired. Request a new one below.' : null
+  )
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -18,7 +24,7 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+      redirectTo: `${window.location.origin}/auth/reset-callback`,
     })
 
     setLoading(false)
@@ -97,5 +103,13 @@ export default function ForgotPasswordPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense>
+      <ForgotPasswordForm />
+    </Suspense>
   )
 }
