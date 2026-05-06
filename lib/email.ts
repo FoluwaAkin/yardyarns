@@ -31,11 +31,11 @@ function emailHtml(bodyContent: string): string {
             <td align="center" style="padding-bottom:20px;">
               <a href="${SITE_URL}" style="text-decoration:none;display:inline-block;">
                 <img
-                  src="${SITE_URL}/icon"
-                  alt="YY"
-                  width="40"
-                  height="40"
-                  style="display:block;border-radius:9px;border:0;"
+                  src="${SITE_URL}/api/email-logo"
+                  alt="YardYarns"
+                  width="220"
+                  height="44"
+                  style="display:block;border:0;"
                 />
               </a>
             </td>

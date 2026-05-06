@@ -119,7 +119,7 @@ export default async function UserProfilePage({ params }: Props) {
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-center gap-3">
             <EagleAvatar
               personality={(profile.avatar as EaglePersonality) ?? 'happy'}
@@ -135,7 +135,7 @@ export default async function UserProfilePage({ params }: Props) {
             </div>
           </div>
           {isOwnProfile && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Link
                 href="/onboarding?next=/dashboard"
                 className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 transition hover:bg-gray-50 dark:hover:bg-gray-800"
