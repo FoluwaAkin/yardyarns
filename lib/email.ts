@@ -32,9 +32,9 @@ function emailHtml(bodyContent: string): string {
               <a href="${SITE_URL}" style="text-decoration:none;display:inline-block;">
                 <img
                   src="${SITE_URL}/api/email-logo"
-                  alt="YardYarns"
-                  width="220"
-                  height="44"
+                  alt="Yard Yarns"
+                  width="280"
+                  height="96"
                   style="display:block;border:0;"
                 />
               </a>
