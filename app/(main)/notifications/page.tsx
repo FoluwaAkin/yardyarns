@@ -20,12 +20,14 @@ export default async function NotificationsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/signin?redirectTo=/notifications')
 
-  const { data: notifications } = await supabase
+  const { data: notifications, error: notifError } = await supabase
     .from('notifications')
     .select('id, type, title, body, link, read, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50)
+
+  if (notifError) console.error('[notifications] fetch error:', notifError)
 
   const unreadCount = (notifications ?? []).filter((n) => !n.read).length
 
