@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
-import { MapPin, MessageCircle, Trash2 } from 'lucide-react'
+import { MapPin, MessageCircle, Trash2, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { AspectRatingBar } from './AspectRatingBar'
 import { LikeButton } from '@/components/feed/LikeButton'
@@ -214,12 +214,18 @@ export function ReviewCard({
       {/* Inline comments */}
       {showComments && (
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
-          <CommentThread
-            reviewId={review.id}
-            initialComments={comments ?? []}
-            currentUserId={currentUserId}
-            currentUsername={currentUsername}
-          />
+          {comments === null ? (
+            <div className="flex justify-center py-4">
+              <Loader2 size={16} className="animate-spin text-gray-300 dark:text-gray-600" />
+            </div>
+          ) : (
+            <CommentThread
+              reviewId={review.id}
+              initialComments={comments}
+              currentUserId={currentUserId}
+              currentUsername={currentUsername}
+            />
+          )}
         </div>
       )}
     </article>
