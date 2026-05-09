@@ -82,7 +82,7 @@ export function PostCard({
           username: (c.profiles as unknown as { username: string } | null)?.username ?? 'unknown',
         }))
         setComments(rows)
-        setLiveCount(rows.filter((r) => !r.parent_id).length)
+        setLiveCount(rows.length)
       })
   }, [showComments, post.id, comments])
 
