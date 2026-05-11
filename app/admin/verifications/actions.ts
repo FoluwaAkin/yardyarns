@@ -85,7 +85,7 @@ export async function verifyTenancy(tenancyId: string) {
         p_type:    'tenancy_verified',
         p_title:   'Tenancy verified',
         p_body:    `Your tenancy at ${unitLabel}${address ? ', ' + address : ''} has been verified. Your ratings now count.`,
-        p_link:    '/notifications',
+        p_link:    '/dashboard',
       }).then(undefined, () => {}),
       sendTenancyVerified({
         email: recipientEmail,
