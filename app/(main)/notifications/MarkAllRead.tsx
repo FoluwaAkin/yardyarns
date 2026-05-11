@@ -1,17 +1,16 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { markAllRead } from './actions'
 
 export function MarkAllRead({ hasUnread }: { hasUnread: boolean }) {
-  const [, startTransition] = useTransition()
+  const router = useRouter()
 
   useEffect(() => {
     if (!hasUnread) return
-    startTransition(async () => {
-      await markAllRead()
-    })
-  }, [hasUnread])
+    markAllRead().then(() => router.refresh())
+  }, [hasUnread, router])
 
   return null
 }
