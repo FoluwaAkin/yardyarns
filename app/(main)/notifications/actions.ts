@@ -1,7 +1,7 @@
 'use server'
 
 import { createActionClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { refresh } from 'next/cache'
 
 export async function markAllRead() {
   const supabase = await createActionClient()
@@ -14,5 +14,5 @@ export async function markAllRead() {
     .eq('user_id', user.id)
     .eq('read', false)
 
-  revalidatePath('/notifications')
+  refresh()
 }
