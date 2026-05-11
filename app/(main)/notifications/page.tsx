@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { Bell, Heart, MessageCircle, BadgeCheck, XCircle, CornerDownRight } from 'lucide-react'
-import { markAllRead } from './actions'
+import { MarkAllRead } from './MarkAllRead'
 
 const TYPE_META: Record<string, { icon: React.ElementType; colour: string }> = {
   like_post:         { icon: Heart,           colour: 'text-red-400' },
@@ -31,13 +31,9 @@ export default async function NotificationsPage() {
 
   const unreadCount = (notifications ?? []).filter((n) => !n.read).length
 
-  // Mark all as read on visit
-  if (unreadCount > 0) {
-    await markAllRead()
-  }
-
   return (
     <div className="space-y-4">
+      <MarkAllRead hasUnread={unreadCount > 0} />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Notifications</h1>
         {unreadCount > 0 && (
