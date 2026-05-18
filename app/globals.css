@@ -36,3 +36,14 @@ input, textarea, select {
     color: #f3f4f6;
   }
 }
+
+/* Pending-navigation feedback: a clicked <Link> pulses gently once
+   prefetching is in progress for >100ms. Fast nav skips it entirely. */
+.nav-pending {
+  animation: nav-pending-pulse 1s ease-in-out 100ms infinite;
+}
+
+@keyframes nav-pending-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
