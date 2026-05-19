@@ -4,6 +4,7 @@ import { ReviewCard } from '@/components/review/ReviewCard'
 import { PostCard } from '@/components/posts/PostCard'
 import { FeedFilter } from '@/components/feed/FeedFilter'
 import { ContributeFlow } from '@/components/home/ContributeFlow'
+import { ActiveTenancyPrompt, type ActiveTenancyOption } from '@/components/home/ActiveTenancyPrompt'
 import type { FeedFilter as FeedFilterType } from '@/types'
 
 interface Props {
@@ -18,9 +19,31 @@ export default async function HomePage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
 
   let username: string | null = null
+  let activeTenancies: ActiveTenancyOption[] = []
   if (user) {
     const { data } = await supabase.from('profiles').select('username').eq('id', user.id).single()
     username = data?.username ?? null
+
+    const today = new Date().toISOString().split('T')[0]
+    const { data: tenancyRows } = await supabase
+      .from('tenancies')
+      .select(`unit_id, units(unit_identifier, properties(name, address, city))`)
+      .eq('user_id', user.id)
+      .eq('verification_status', 'verified')
+      .lte('start_date', today)
+      .or(`end_date.is.null,end_date.gte.${today}`)
+    activeTenancies = (tenancyRows ?? []).map((t) => {
+      const u = t.units as unknown as {
+        unit_identifier: string
+        properties: { name: string | null; address: string; city: string } | null
+      } | null
+      return {
+        unitId: t.unit_id,
+        unitLabel: u?.unit_identifier ?? '',
+        propertyLabel: u?.properties?.name ?? u?.properties?.address ?? '',
+        propertyCity: u?.properties?.city ?? '',
+      }
+    })
   }
 
   // Fetch latest reviews with joins
@@ -28,6 +51,7 @@ export default async function HomePage({ searchParams }: Props) {
     .from('reviews')
     .select(`
       id, body, period_start, period_end, created_at, unit_id, tenancy_id, user_id,
+      rent_amount, rent_frequency, service_charge, agency_fee, legal_fee, caution_deposit, currency,
       ratings(aspect, score),
       tenancies(verification_status),
       profiles!reviews_user_id_fkey(username),
@@ -135,6 +159,9 @@ export default async function HomePage({ searchParams }: Props) {
           Honest reviews from real tenants. No agents, no spin.
         </p>
       </div>
+
+      {/* Personalised prompt for verified active tenants */}
+      {user && <ActiveTenancyPrompt userId={user.id} tenancies={activeTenancies} />}
 
       {/* Contribute CTAs */}
       <ContributeFlow currentUserId={user?.id ?? null} currentUsername={username} />

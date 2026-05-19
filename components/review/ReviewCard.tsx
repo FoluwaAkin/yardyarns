@@ -36,6 +36,13 @@ interface Props {
     unit_id: string
     tenancy_id: string | null
     user_id: string
+    rent_amount?: number | null
+    rent_frequency?: 'annual' | 'monthly' | null
+    service_charge?: number | null
+    agency_fee?: number | null
+    legal_fee?: number | null
+    caution_deposit?: number | null
+    currency?: string | null
   }
   username: string
   isVerified: boolean
@@ -49,6 +56,78 @@ interface Props {
   currentUserId: string | null
   currentUsername?: string | null
   showDelete?: boolean
+}
+
+function fmtMoney(amount: number, currency: string) {
+  try {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  } catch {
+    return `${currency} ${amount.toLocaleString('en-NG')}`
+  }
+}
+
+function PricingBlock({
+  rentAmount,
+  rentFrequency,
+  serviceCharge,
+  agencyFee,
+  legalFee,
+  cautionDeposit,
+  currency,
+}: {
+  rentAmount: number | null
+  rentFrequency: 'annual' | 'monthly' | null
+  serviceCharge: number | null
+  agencyFee: number | null
+  legalFee: number | null
+  cautionDeposit: number | null
+  currency: string
+}) {
+  const freqLabel = rentFrequency === 'monthly' ? '/ month' : '/ year'
+  const oneOffs: { label: string; value: number }[] = []
+  if (agencyFee != null) oneOffs.push({ label: 'Agency', value: agencyFee })
+  if (legalFee != null) oneOffs.push({ label: 'Legal', value: legalFee })
+  if (cautionDeposit != null) oneOffs.push({ label: 'Caution', value: cautionDeposit })
+
+  return (
+    <div className="mb-4 rounded-lg border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-900/10 p-3">
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-emerald-700/80 dark:text-emerald-400/80">
+        Commercial terms · verified
+      </p>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+        {rentAmount != null && (
+          <div className="col-span-2 flex items-baseline justify-between">
+            <span className="text-gray-500 dark:text-gray-400">Rent</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {fmtMoney(rentAmount, currency)} <span className="text-gray-400 dark:text-gray-500 font-normal">{freqLabel}</span>
+            </span>
+          </div>
+        )}
+        {serviceCharge != null && (
+          <div className="col-span-2 flex items-baseline justify-between">
+            <span className="text-gray-500 dark:text-gray-400">Service charge</span>
+            <span className="text-gray-800 dark:text-gray-200">
+              {fmtMoney(serviceCharge, currency)} <span className="text-gray-400 dark:text-gray-500">{freqLabel}</span>
+            </span>
+          </div>
+        )}
+        {oneOffs.length > 0 && (
+          <div className="col-span-2 mt-1 grid grid-cols-3 gap-2 border-t border-emerald-100 dark:border-emerald-900/40 pt-2">
+            {oneOffs.map((f) => (
+              <div key={f.label}>
+                <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">{f.label}</p>
+                <p className="text-xs font-medium text-gray-800 dark:text-gray-200">{fmtMoney(f.value, currency)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function formatPeriod(start: string, end: string) {
@@ -155,6 +234,25 @@ export function ReviewCard({
             return <AspectRatingBar key={key} label={label} score={score} />
           })}
         </div>
+      )}
+
+      {/* Commercial terms — only when verified and at least one value present */}
+      {isVerified && (
+        review.rent_amount != null ||
+        review.service_charge != null ||
+        review.agency_fee != null ||
+        review.legal_fee != null ||
+        review.caution_deposit != null
+      ) && (
+        <PricingBlock
+          rentAmount={review.rent_amount ?? null}
+          rentFrequency={review.rent_frequency ?? null}
+          serviceCharge={review.service_charge ?? null}
+          agencyFee={review.agency_fee ?? null}
+          legalFee={review.legal_fee ?? null}
+          cautionDeposit={review.caution_deposit ?? null}
+          currency={review.currency ?? 'NGN'}
+        />
       )}
 
       {/* Actions */}

@@ -46,6 +46,7 @@ export default async function UserProfilePage({ params }: Props) {
       .from('reviews')
       .select(`
         id, body, period_start, period_end, created_at, unit_id, tenancy_id, user_id,
+        rent_amount, rent_frequency, service_charge, agency_fee, legal_fee, caution_deposit, currency,
         ratings(aspect, score),
         tenancies(verification_status),
         profiles!reviews_user_id_fkey(username),

@@ -61,6 +61,13 @@ export function ReviewComposer({ unitId, userId, tenancyId, onSuccess }: Props) 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [rentAmount, setRentAmount] = useState('')
+  const [rentFrequency, setRentFrequency] = useState<'annual' | 'monthly'>('annual')
+  const [serviceCharge, setServiceCharge] = useState('')
+  const [agencyFee, setAgencyFee] = useState('')
+  const [legalFee, setLegalFee] = useState('')
+  const [cautionDeposit, setCautionDeposit] = useState('')
+
   function setScore(aspect: string, value: number) {
     setScores((prev) => ({ ...prev, [aspect]: value }))
   }
@@ -70,6 +77,16 @@ export function ReviewComposer({ unitId, userId, tenancyId, onSuccess }: Props) 
     if (diff < 6) return 'Period must be at least 7 days.'
     if (diff > 30) return 'Period must be at most 31 days.'
     return null
+  }
+
+  function parsePrice(label: string, raw: string): { value: number | null; err: string | null } {
+    const trimmed = raw.trim()
+    if (!trimmed) return { value: null, err: null }
+    const n = Number(trimmed)
+    if (!Number.isFinite(n) || n < 0) {
+      return { value: null, err: `${label} must be a non-negative number.` }
+    }
+    return { value: n, err: null }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -83,8 +100,30 @@ export function ReviewComposer({ unitId, userId, tenancyId, onSuccess }: Props) 
       return
     }
 
+    const priceFields: Record<string, { value: number | null; err: string | null }> = {}
+    if (tenancyId) {
+      priceFields.rent_amount = parsePrice('Rent', rentAmount)
+      priceFields.service_charge = parsePrice('Service charge', serviceCharge)
+      priceFields.agency_fee = parsePrice('Agency fee', agencyFee)
+      priceFields.legal_fee = parsePrice('Legal fee', legalFee)
+      priceFields.caution_deposit = parsePrice('Caution deposit', cautionDeposit)
+      const firstErr = Object.values(priceFields).find((p) => p.err)?.err
+      if (firstErr) { setError(firstErr); return }
+    }
+
     setError(null)
     setLoading(true)
+
+    const pricingPayload = tenancyId
+      ? {
+          rent_amount: priceFields.rent_amount.value,
+          rent_frequency: priceFields.rent_amount.value !== null ? rentFrequency : null,
+          service_charge: priceFields.service_charge.value,
+          agency_fee: priceFields.agency_fee.value,
+          legal_fee: priceFields.legal_fee.value,
+          caution_deposit: priceFields.caution_deposit.value,
+        }
+      : {}
 
     // Insert review
     const { data: review, error: reviewError } = await supabase
@@ -96,6 +135,7 @@ export function ReviewComposer({ unitId, userId, tenancyId, onSuccess }: Props) 
         period_start: periodStart,
         period_end: periodEnd,
         body: body.trim(),
+        ...pricingPayload,
       })
       .select('id')
       .single()
@@ -128,6 +168,11 @@ export function ReviewComposer({ unitId, userId, tenancyId, onSuccess }: Props) 
 
     setBody('')
     setScores({})
+    setRentAmount('')
+    setServiceCharge('')
+    setAgencyFee('')
+    setLegalFee('')
+    setCautionDeposit('')
     if (onSuccess) {
       onSuccess()
     } else {
@@ -205,6 +250,93 @@ export function ReviewComposer({ unitId, userId, tenancyId, onSuccess }: Props) 
           className="w-full resize-none rounded-lg border border-gray-200 dark:border-gray-600 px-3 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-400 dark:focus:ring-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
         />
       </div>
+
+      {/* Commercial terms — verified tenants only */}
+      {tenancyId && (
+        <div className="rounded-lg border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-900/10 p-3 space-y-3">
+          <div>
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Commercial terms <span className="text-gray-400 dark:text-gray-500">(optional)</span></p>
+            <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">From your verified rental agreement. Skip any that don&apos;t apply.</p>
+          </div>
+
+          {/* Rent + frequency toggle */}
+          <div>
+            <label className="mb-1 block text-[11px] text-gray-500 dark:text-gray-400">Rent</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">₦</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={rentAmount}
+                  onChange={(e) => setRentAmount(e.target.value)}
+                  placeholder="e.g. 2500000"
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 pl-7 pr-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                />
+              </div>
+              <div className="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setRentFrequency('annual')}
+                  className={`rounded-md px-2.5 py-1.5 transition ${rentFrequency === 'annual' ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900' : 'text-gray-500 dark:text-gray-400'}`}
+                >
+                  / year
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRentFrequency('monthly')}
+                  className={`rounded-md px-2.5 py-1.5 transition ${rentFrequency === 'monthly' ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900' : 'text-gray-500 dark:text-gray-400'}`}
+                >
+                  / month
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Service charge */}
+          <div>
+            <label className="mb-1 block text-[11px] text-gray-500 dark:text-gray-400">Service charge</label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">₦</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={serviceCharge}
+                onChange={(e) => setServiceCharge(e.target.value)}
+                placeholder="e.g. 150000"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 pl-7 pr-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+              />
+            </div>
+          </div>
+
+          {/* One-off fees */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Agency', value: agencyFee, set: setAgencyFee },
+              { label: 'Legal', value: legalFee, set: setLegalFee },
+              { label: 'Caution', value: cautionDeposit, set: setCautionDeposit },
+            ].map(({ label, value, set }) => (
+              <div key={label}>
+                <label className="mb-1 block text-[11px] text-gray-500 dark:text-gray-400">{label}</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">₦</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={value}
+                    onChange={(e) => set(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 pl-6 pr-2 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
