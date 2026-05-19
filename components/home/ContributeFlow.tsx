@@ -178,35 +178,25 @@ export function ContributeFlow({
   // ── IDLE ─────────────────────────────────────────────────────────────────
   if (step === 'idle') {
     return (
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => start('post')}
-          className="group flex flex-col items-start gap-3 rounded-2xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10 p-4 text-left transition hover:border-amber-300 dark:hover:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/20 active:scale-[0.98]"
+          className="group flex items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10 px-3 py-2.5 text-left transition hover:border-amber-300 dark:hover:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/20 active:scale-[0.98]"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-200 dark:bg-amber-800/50 text-amber-600 dark:text-amber-400 transition group-hover:bg-amber-300 dark:group-hover:bg-amber-700/50">
-            <MessageSquare size={15} />
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-200 dark:bg-amber-800/50 text-amber-600 dark:text-amber-400 transition group-hover:bg-amber-300 dark:group-hover:bg-amber-700/50">
+            <MessageSquare size={13} />
           </span>
-          <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Share a story</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-              A quick experience about a place you&apos;ve lived
-            </p>
-          </div>
+          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Share a story</span>
         </button>
 
         <button
           onClick={() => start('review')}
-          className="group flex flex-col items-start gap-3 rounded-2xl border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-900/10 p-4 text-left transition hover:border-blue-300 dark:hover:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/20 active:scale-[0.98]"
+          className="group flex items-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-900/10 px-3 py-2.5 text-left transition hover:border-blue-300 dark:hover:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/20 active:scale-[0.98]"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-200 dark:bg-blue-800/50 text-blue-600 dark:text-blue-400 transition group-hover:bg-blue-300 dark:group-hover:bg-blue-700/50">
-            <Star size={15} />
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-200 dark:bg-blue-800/50 text-blue-600 dark:text-blue-400 transition group-hover:bg-blue-300 dark:group-hover:bg-blue-700/50">
+            <Star size={13} />
           </span>
-          <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Write a review</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-              Rate a property with detailed scores
-            </p>
-          </div>
+          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Write a review</span>
         </button>
       </div>
     )

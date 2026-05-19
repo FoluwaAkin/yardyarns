@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Home, X, Droplet, Zap, ShieldCheck } from 'lucide-react'
+import { Home, X } from 'lucide-react'
 import { PostComposer } from '@/components/posts/PostComposer'
 
 export interface ActiveTenancyOption {
@@ -40,26 +40,21 @@ export function ActiveTenancyPrompt({ userId, tenancies }: Props) {
             {!open ? (
               <button
                 onClick={() => setOpenUnitId(t.unitId)}
-                className="flex w-full items-start gap-3 p-4 text-left transition hover:bg-emerald-100 dark:hover:bg-emerald-900/20 active:scale-[0.99]"
+                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-emerald-100 dark:hover:bg-emerald-900/20 active:scale-[0.99]"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-200 dark:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300">
-                  <Home size={15} />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-200 dark:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300">
+                  <Home size={13} />
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
                     How&apos;s{' '}
                     <span className="text-emerald-700 dark:text-emerald-300">{t.propertyLabel}</span>
-                    {' '}treating you right now?
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    Drop a quick update for the {t.unitLabel} community.
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
-                    <span className="inline-flex items-center gap-1"><Droplet size={10} /> Water</span>
-                    <span className="inline-flex items-center gap-1"><Zap size={10} /> Power</span>
-                    <span className="inline-flex items-center gap-1"><ShieldCheck size={10} /> Security</span>
-                  </div>
-                </div>
+                    {' '}treating you?
+                  </span>
+                  <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">
+                    Drop a quick update for the community.
+                  </span>
+                </span>
               </button>
             ) : (
               <div>

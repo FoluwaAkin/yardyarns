@@ -9,6 +9,7 @@ import { AspectRatingBar } from './AspectRatingBar'
 import { LikeButton } from '@/components/feed/LikeButton'
 import { VerifiedBadge } from '@/components/feed/VerifiedBadge'
 import { CommentThread } from '@/components/comments/CommentThread'
+import { EagleAvatar, type EaglePersonality } from '@/components/ui/EagleAvatar'
 import { REVIEW_ASPECTS } from '@/types'
 import { deleteReview } from '@/app/(main)/u/[username]/actions'
 
@@ -45,6 +46,7 @@ interface Props {
     currency?: string | null
   }
   username: string
+  avatar?: EaglePersonality | null
   isVerified: boolean
   unitLabel: string
   propertyAddress: string
@@ -143,6 +145,7 @@ function formatPeriod(start: string, end: string) {
 export function ReviewCard({
   review,
   username,
+  avatar = null,
   isVerified,
   unitLabel,
   propertyAddress,
@@ -191,14 +194,19 @@ export function ReviewCard({
     <article className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm dark:shadow-gray-900">
       {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Link href={`/u/${username}`} className="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:underline">
-            @{username}
+        <div className="flex min-w-0 items-center gap-2">
+          <Link href={`/u/${username}`} className="shrink-0">
+            <EagleAvatar personality={avatar} size={32} />
           </Link>
-          {isVerified && <VerifiedBadge />}
-          <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-            Review
-          </span>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Link href={`/u/${username}`} className="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:underline">
+              @{username}
+            </Link>
+            {isVerified && <VerifiedBadge />}
+            <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Review
+            </span>
+          </div>
         </div>
         <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
           {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}

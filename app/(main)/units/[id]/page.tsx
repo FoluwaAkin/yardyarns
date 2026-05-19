@@ -8,6 +8,7 @@ import { PostCard } from '@/components/posts/PostCard'
 import { CommentThread } from '@/components/comments/CommentThread'
 import { FeedFilter } from '@/components/feed/FeedFilter'
 import { ComposerSection } from '@/components/unit/ComposerSection'
+import type { EaglePersonality } from '@/components/ui/EagleAvatar'
 import type { FeedFilter as FeedFilterType } from '@/types'
 
 interface Props {
@@ -70,7 +71,7 @@ export default async function UnitPage({ params, searchParams }: Props) {
       rent_amount, rent_frequency, service_charge, agency_fee, legal_fee, caution_deposit, currency,
       ratings(aspect, score),
       tenancies(verification_status),
-      profiles!reviews_user_id_fkey(username)
+      profiles!reviews_user_id_fkey(username, avatar)
     `)
     .eq('unit_id', id)
     .order('created_at', { ascending: false })
@@ -80,7 +81,7 @@ export default async function UnitPage({ params, searchParams }: Props) {
     .from('posts')
     .select(`
       id, body, created_at, unit_id, user_id, media_urls,
-      profiles!posts_user_id_fkey(username)
+      profiles!posts_user_id_fkey(username, avatar)
     `)
     .eq('unit_id', id)
     .order('created_at', { ascending: false })
@@ -238,12 +239,13 @@ export default async function UnitPage({ params, searchParams }: Props) {
               const r = entry.item
               const isVerified =
                 (r.tenancies as unknown as { verification_status: string } | null)?.verification_status === 'verified'
-              const profile = r.profiles as unknown as { username: string } | null
+              const profile = r.profiles as unknown as { username: string; avatar: string | null } | null
               return (
                 <div key={r.id} id={`review-${r.id}`}>
                   <ReviewCard
                     review={r}
                     username={profile?.username ?? 'unknown'}
+                    avatar={(profile?.avatar ?? null) as EaglePersonality | null}
                     isVerified={isVerified}
                     unitLabel={unit.unit_identifier}
                     propertyAddress={propertyAddress}
@@ -266,12 +268,13 @@ export default async function UnitPage({ params, searchParams }: Props) {
               )
             } else {
               const p = entry.item
-              const profile = p.profiles as unknown as { username: string } | null
+              const profile = p.profiles as unknown as { username: string; avatar: string | null } | null
               return (
                 <div key={p.id} id={`post-${p.id}`}>
                   <PostCard
                     post={p}
                     username={profile?.username ?? 'unknown'}
+                    avatar={(profile?.avatar ?? null) as EaglePersonality | null}
                     isVerified={verifiedPostKeys.has(`${p.user_id}:${p.unit_id}`)}
                     unitLabel={unit.unit_identifier}
                     propertyAddress={propertyAddress}

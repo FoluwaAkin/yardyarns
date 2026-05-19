@@ -49,7 +49,7 @@ export default async function UserProfilePage({ params }: Props) {
         rent_amount, rent_frequency, service_charge, agency_fee, legal_fee, caution_deposit, currency,
         ratings(aspect, score),
         tenancies(verification_status),
-        profiles!reviews_user_id_fkey(username),
+        profiles!reviews_user_id_fkey(username, avatar),
         units(unit_identifier, property_id, properties(id, address, city))
       `)
       .eq('user_id', profile.id)
@@ -58,7 +58,7 @@ export default async function UserProfilePage({ params }: Props) {
       .from('posts')
       .select(`
         id, body, created_at, unit_id, user_id, media_urls,
-        profiles!posts_user_id_fkey(username),
+        profiles!posts_user_id_fkey(username, avatar),
         units(unit_identifier, property_id, properties(id, address, city))
       `)
       .eq('user_id', profile.id)
@@ -253,6 +253,7 @@ export default async function UserProfilePage({ params }: Props) {
                     key={r.id}
                     review={r}
                     username={profileData?.username ?? username}
+                    avatar={(profile.avatar as EaglePersonality | null) ?? null}
                     isVerified={isVerified}
                     unitLabel={unitData?.unit_identifier ?? ''}
                     propertyAddress={unitData?.properties ? `${unitData.properties.address}, ${unitData.properties.city}` : ''}
@@ -275,6 +276,7 @@ export default async function UserProfilePage({ params }: Props) {
                     key={p.id}
                     post={p}
                     username={profileData?.username ?? username}
+                    avatar={(profile.avatar as EaglePersonality | null) ?? null}
                     isVerified={verifiedPostKeys.has(`${p.user_id}:${p.unit_id}`)}
                     unitLabel={unitData?.unit_identifier ?? ''}
                     propertyAddress={unitData?.properties ? `${unitData.properties.address}, ${unitData.properties.city}` : ''}
